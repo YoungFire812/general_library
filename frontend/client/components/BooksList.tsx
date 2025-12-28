@@ -148,42 +148,66 @@ export default function BooksList() {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {books.map((book) => (
-          <button
+          <div
             key={book.id}
-            onClick={() => setSelectedBook(book)}
-            className="group flex flex-col gap-3 text-left transition-transform hover:scale-105 active:scale-95"
+            className="group flex flex-col gap-3 text-left"
           >
-            {/* Book Cover Image with Add to Cart Button */}
-            <div className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md">
+            {/* Book Cover Image - Clickable for lightbox */}
+            <div
+              className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md cursor-pointer group/image"
+              onClick={() => setLightboxImages(book.images || [book.coverImage])}
+            >
               <img
                 src={book.coverImage}
                 alt={book.title}
-                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                className="w-full h-full object-cover group-hover/image:opacity-80 transition-opacity"
               />
 
-              {/* Add to Cart Button - Floating in corner */}
-              <button
-                onClick={(e) => handleAddToCart(e, book)}
-                className="absolute bottom-3 right-3 bg-green-600 hover:bg-green-700 text-white p-2.5 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                title="Add to cart"
-              >
-                <ShoppingCart className="w-5 h-5" />
-              </button>
+              {/* Overlay on hover to show it's clickable */}
+              <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors flex items-center justify-center">
+                <p className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity font-semibold text-sm">
+                  View full size
+                </p>
+              </div>
             </div>
 
-            {/* Book Info */}
-            <div className="flex flex-col gap-1">
-              <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
-                {book.title}
-              </h3>
-              <p className="text-sm text-gray-600">{book.author}</p>
-              <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
-                {book.category}
-              </span>
+            {/* Book Info with Add to Cart Button */}
+            <div className="flex flex-col gap-2">
+              {/* Title, Author, Category */}
+              <button
+                onClick={() => setSelectedBook(book)}
+                className="text-left hover:opacity-70 transition-opacity"
+              >
+                <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
+                  {book.title}
+                </h3>
+                <p className="text-sm text-gray-600">{book.author}</p>
+                <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
+                  {book.category}
+                </span>
+              </button>
+
+              {/* Add to Cart Button - Rectangular, lower position */}
+              <button
+                onClick={(e) => handleAddToCart(e, book)}
+                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded transition-colors mt-1"
+                title="Add to cart"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </button>
             </div>
-          </button>
+          </div>
         ))}
       </div>
+
+      {/* Image Lightbox */}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          onClose={() => setLightboxImages(null)}
+        />
+      )}
 
       <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
     </>
