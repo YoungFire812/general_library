@@ -1,20 +1,19 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Minus, Plus, X } from "lucide-react";
 import { Book } from "./BooksList";
 
 interface ExchangeOfferModalProps {
   book: Book | null;
   open: boolean;
   onClose: () => void;
+}
+
+interface SelectedBook {
+  bookId: string;
+  quantity: number;
 }
 
 // Placeholder books for the user's library - Replace with API data later
@@ -55,6 +54,42 @@ const placeholderUserBooks: Book[] = [
     coverImage:
       "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
   },
+  {
+    id: "user-4",
+    title: "The Lord of the Rings",
+    author: "J.R.R. Tolkien",
+    category: "Fantasy",
+    description: "An epic fantasy trilogy about the quest to destroy the One Ring.",
+    images: [
+      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
+    ],
+    coverImage:
+      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
+  },
+  {
+    id: "user-5",
+    title: "The Name of the Wind",
+    author: "Patrick Rothfuss",
+    category: "Fantasy",
+    description: "A fantasy novel about a legendary figure telling his own story.",
+    images: [
+      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
+    ],
+    coverImage:
+      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
+  },
+  {
+    id: "user-6",
+    title: "Foundation",
+    author: "Isaac Asimov",
+    category: "Science Fiction",
+    description: "A science fiction epic spanning thousands of years.",
+    images: [
+      "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
+    ],
+    coverImage:
+      "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
+  },
 ];
 
 export default function ExchangeOfferModal({
@@ -62,14 +97,51 @@ export default function ExchangeOfferModal({
   open,
   onClose,
 }: ExchangeOfferModalProps) {
-  const [selectedBook, setSelectedBook] = useState<string>("");
+  const [selectedBooks, setSelectedBooks] = useState<SelectedBook[]>([]);
   const [message, setMessage] = useState<string>("");
 
   if (!book) return null;
 
+  const toggleBookSelection = (bookId: string) => {
+    setSelectedBooks((prev) => {
+      const existing = prev.find((b) => b.bookId === bookId);
+      if (existing) {
+        return prev.filter((b) => b.bookId !== bookId);
+      } else {
+        return [...prev, { bookId, quantity: 1 }];
+      }
+    });
+  };
+
+  const updateQuantity = (bookId: string, quantity: number) => {
+    if (quantity < 1) return;
+    setSelectedBooks((prev) =>
+      prev.map((b) => (b.bookId === bookId ? { ...b, quantity } : b))
+    );
+  };
+
+  const removeSelectedBook = (bookId: string) => {
+    setSelectedBooks((prev) => prev.filter((b) => b.bookId !== bookId));
+  };
+
+  const isBookSelected = (bookId: string) => {
+    return selectedBooks.some((b) => b.bookId === bookId);
+  };
+
+  const getSelectedBookQuantity = (bookId: string) => {
+    return selectedBooks.find((b) => b.bookId === bookId)?.quantity || 0;
+  };
+
+  const getSelectedBooksDetails = () => {
+    return selectedBooks.map((sb) => {
+      const bookDetail = placeholderUserBooks.find((b) => b.id === sb.bookId);
+      return { ...bookDetail, quantity: sb.quantity };
+    });
+  };
+
   const handleSendOffer = () => {
-    if (!selectedBook) {
-      alert("Please select a book to offer");
+    if (selectedBooks.length === 0) {
+      alert("Please select at least one book to offer");
       return;
     }
 
@@ -78,14 +150,14 @@ export default function ExchangeOfferModal({
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({
-    //     offeredBookId: selectedBook,
+    //     offeredBooks: selectedBooks,
     //     requestedBookId: book.id,
     //     message: message,
     //   }),
     // });
 
     console.log("Exchange offer submitted:", {
-      offeredBookId: selectedBook,
+      offeredBooks: selectedBooks,
       requestedBookId: book.id,
       message: message,
     });
@@ -95,18 +167,16 @@ export default function ExchangeOfferModal({
   };
 
   const handleClose = () => {
-    setSelectedBook("");
+    setSelectedBooks([]);
     setMessage("");
     onClose();
   };
 
-  const selectedUserBook = placeholderUserBooks.find(
-    (b) => b.id === selectedBook
-  );
+  const selectedBooksDetails = getSelectedBooksDetails();
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Propose Book Exchange
@@ -115,9 +185,9 @@ export default function ExchangeOfferModal({
 
         <div className="flex flex-col gap-6 py-4">
           {/* Exchange Overview */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-gray-50 p-4 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4 items-start justify-between bg-gray-50 p-4 rounded-lg">
             {/* Requested Book */}
-            <div className="flex-1 flex flex-col gap-2 text-center sm:text-left">
+            <div className="flex-1 flex flex-col gap-2">
               <span className="text-xs text-gray-500 uppercase tracking-wide">
                 You want
               </span>
@@ -137,57 +207,129 @@ export default function ExchangeOfferModal({
             </div>
 
             {/* Exchange Arrow */}
-            <div className="text-2xl text-gray-400">⇄</div>
+            <div className="text-2xl text-gray-400 flex-shrink-0">⇄</div>
 
-            {/* Offered Book */}
-            <div className="flex-1 flex flex-col gap-2 text-center sm:text-left">
+            {/* Offered Books Summary */}
+            <div className="flex-1 flex flex-col gap-2">
               <span className="text-xs text-gray-500 uppercase tracking-wide">
-                You offer
+                You offer ({selectedBooks.length})
               </span>
-              {selectedUserBook ? (
-                <div className="flex gap-3 items-start">
-                  <img
-                    src={selectedUserBook.coverImage}
-                    alt={selectedUserBook.title}
-                    className="w-12 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-sm">
-                      {selectedUserBook.title}
-                    </h3>
-                    <p className="text-xs text-gray-600">
-                      {selectedUserBook.author}
-                    </p>
-                  </div>
+              {selectedBooksDetails.length > 0 ? (
+                <div className="flex gap-2 flex-wrap">
+                  {selectedBooksDetails.map((sb) => (
+                    <div
+                      key={sb?.id}
+                      className="flex gap-2 items-center bg-white p-2 rounded border border-[#6750A4]"
+                    >
+                      <img
+                        src={sb?.coverImage}
+                        alt={sb?.title}
+                        className="w-8 h-10 object-cover rounded"
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-medium text-gray-900 line-clamp-1 max-w-[80px]">
+                          {sb?.title}
+                        </span>
+                        {sb?.quantity && sb.quantity > 1 && (
+                          <span className="text-xs bg-[#6750A4] text-white px-2 py-0.5 rounded">
+                            x{sb.quantity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="text-sm text-gray-400 italic">Select a book</div>
+                <div className="text-sm text-gray-400 italic">
+                  Select books below
+                </div>
               )}
             </div>
           </div>
 
-          {/* Select Your Book */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-900">
-              Select Book from Your Library
-            </label>
-            <Select value={selectedBook} onValueChange={setSelectedBook}>
-              <SelectTrigger className="h-12 border-gray-300">
-                <SelectValue placeholder="Choose a book to offer..." />
-              </SelectTrigger>
-              <SelectContent>
-                {placeholderUserBooks.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{b.title}</span>
-                      <span className="text-xs text-gray-500">
-                        by {b.author}
-                      </span>
+          {/* Your Library Grid */}
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="text-sm font-semibold text-gray-900">
+                Select Books from Your Library
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Click on books to select them, adjust quantities as needed
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {placeholderUserBooks.map((userBook) => {
+                const isSelected = isBookSelected(userBook.id);
+                const quantity = getSelectedBookQuantity(userBook.id);
+
+                return (
+                  <div
+                    key={userBook.id}
+                    className={`flex flex-col gap-2 p-2 rounded-lg border-2 transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-[#6750A4] bg-[#F3E5F5]"
+                        : "border-gray-200 bg-white hover:border-[#6750A4]"
+                    }`}
+                    onClick={() => toggleBookSelection(userBook.id)}
+                  >
+                    {/* Book Cover */}
+                    <div className="relative">
+                      <img
+                        src={userBook.coverImage}
+                        alt={userBook.title}
+                        className="w-full aspect-[2/3] object-cover rounded"
+                      />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-[#6750A4]/20 rounded flex items-center justify-center">
+                          <div className="bg-[#6750A4] text-white rounded-full p-2">
+                            ✓
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+                    {/* Book Title and Author */}
+                    <div className="flex-1">
+                      <h4 className="text-xs font-semibold text-gray-900 line-clamp-2">
+                        {userBook.title}
+                      </h4>
+                      <p className="text-xs text-gray-600 line-clamp-1">
+                        {userBook.author}
+                      </p>
+                    </div>
+
+                    {/* Quantity Selector - Only show when selected */}
+                    {isSelected && (
+                      <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-1.5 py-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateQuantity(userBook.id, quantity - 1);
+                          }}
+                          className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <Minus className="w-3 h-3 text-gray-600" />
+                        </button>
+                        <span className="flex-1 text-center text-sm font-semibold text-gray-900 min-w-[20px]">
+                          {quantity}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateQuantity(userBook.id, quantity + 1);
+                          }}
+                          className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <Plus className="w-3 h-3 text-gray-600" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             <p className="text-xs text-gray-500">
               TODO: Replace with your actual books from API
             </p>
@@ -202,49 +344,55 @@ export default function ExchangeOfferModal({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a message to the exchange offer..."
-              className="min-h-24 border-gray-300 resize-none"
+              className="min-h-20 border-gray-300 resize-none"
             />
             <p className="text-xs text-gray-500">
               Share your thoughts about this exchange
             </p>
           </div>
 
-          {/* Book Details Comparison */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex flex-col gap-3">
-              <h4 className="font-semibold text-gray-900 text-sm">
-                Requested Book
-              </h4>
-              <div className="text-sm text-gray-700 space-y-1">
-                <p>
-                  <span className="text-gray-500">Category:</span> {book.category}
-                </p>
-                <p>
-                  <span className="text-gray-500">Author:</span> {book.author}
-                </p>
-                <p className="text-gray-600">{book.description}</p>
+          {/* Selected Books Details */}
+          {selectedBooksDetails.length > 0 && (
+            <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold text-gray-900">Your Offer</h4>
+              <div className="space-y-2">
+                {selectedBooksDetails.map((sb) => (
+                  <div
+                    key={sb?.id}
+                    className="flex items-start justify-between p-3 bg-white rounded border border-gray-200"
+                  >
+                    <div className="flex gap-3 items-start flex-1">
+                      <img
+                        src={sb?.coverImage}
+                        alt={sb?.title}
+                        className="w-10 h-14 object-cover rounded flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-sm text-gray-900">
+                          {sb?.title}
+                        </h5>
+                        <p className="text-xs text-gray-600">{sb?.author}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {sb?.category}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-sm font-semibold text-gray-900 w-6 text-center">
+                        x{sb?.quantity}
+                      </span>
+                      <button
+                        onClick={() => removeSelectedBook(sb?.id || "")}
+                        className="p-1 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <X className="w-4 h-4 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {selectedUserBook && (
-              <div className="flex flex-col gap-3">
-                <h4 className="font-semibold text-gray-900 text-sm">
-                  Your Book
-                </h4>
-                <div className="text-sm text-gray-700 space-y-1">
-                  <p>
-                    <span className="text-gray-500">Category:</span>{" "}
-                    {selectedUserBook.category}
-                  </p>
-                  <p>
-                    <span className="text-gray-500">Author:</span>{" "}
-                    {selectedUserBook.author}
-                  </p>
-                  <p className="text-gray-600">{selectedUserBook.description}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
