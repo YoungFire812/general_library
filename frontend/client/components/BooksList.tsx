@@ -146,44 +146,40 @@ export default function BooksList() {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {books.map((book) => (
-          <div
+          <button
             key={book.id}
-            className="group flex flex-col gap-3 text-left"
+            onClick={() => setSelectedBook(book)}
+            className="group flex flex-col gap-3 text-left transition-transform hover:scale-105 active:scale-95"
           >
-            {/* Book Cover Image - Clickable */}
-            <button
-              onClick={() => setSelectedBook(book)}
-              className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-            >
+            {/* Book Cover Image with Add to Cart Button */}
+            <div className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md">
               <img
                 src={book.coverImage}
                 alt={book.title}
                 className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
               />
-            </button>
 
-            {/* Book Info */}
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col gap-1">
-                <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
-                  {book.title}
-                </h3>
-                <p className="text-sm text-gray-600">{book.author}</p>
-                <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
-                  {book.category}
-                </span>
-              </div>
-
-              {/* Add to Cart Button */}
+              {/* Add to Cart Button - Floating in corner */}
               <button
                 onClick={(e) => handleAddToCart(e, book)}
-                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition-colors"
+                className="absolute bottom-3 right-3 bg-green-600 hover:bg-green-700 text-white p-2.5 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                title="Add to cart"
               >
-                <ShoppingCart className="w-4 h-4" />
-                Add to Cart
+                <ShoppingCart className="w-5 h-5" />
               </button>
             </div>
-          </div>
+
+            {/* Book Info */}
+            <div className="flex flex-col gap-1">
+              <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
+                {book.title}
+              </h3>
+              <p className="text-sm text-gray-600">{book.author}</p>
+              <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
+                {book.category}
+              </span>
+            </div>
+          </button>
         ))}
       </div>
 
