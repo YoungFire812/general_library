@@ -37,6 +37,7 @@ app.add_middleware(
     allow_origins=["*"],  # адрес Vite dev сервера
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,
 )
 
 

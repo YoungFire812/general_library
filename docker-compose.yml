@@ -1,13 +1,15 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:15
+    networks:
+      - app_network
     container_name: postgres
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    env_file:
+      - .env
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     ports:
@@ -16,11 +18,15 @@ services:
 
   minio:
     image: quay.io/minio/minio
+    networks:
+      - app_network
     container_name: minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
+    env_file:
+      - .env
     volumes:
       - ./data/minio:/data
     ports:
@@ -28,10 +34,13 @@ services:
       - "9001:9001"
     restart: unless-stopped
 
-  fastapi:
-    build: .
-    container_name: fastapi_app
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+  backend:
+    networks:
+      - app_network
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: backend
     env_file:
       - .env
     depends_on:
@@ -40,4 +49,24 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./src:/app/src
+
+  frontend:
+    networks:
+      - app_network
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge

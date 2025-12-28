@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings
 from pathlib import Path
 
 
-ENV_PATH = Path(__file__).resolve().parent / ".env"
 class Settings(BaseSettings):
     DB_USERNAME: str
     DB_PASSWORD: str
@@ -21,7 +20,6 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool
 
     class Config:
-        env_file = ENV_PATH
         case_sensitive = True
 
 settings = Settings()
