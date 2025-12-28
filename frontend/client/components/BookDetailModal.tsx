@@ -31,19 +31,34 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
     setOpenExchange(true);
   };
 
+  const handleAddToCart = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookId: book.id,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Book added to cart!");
+      } else {
+        alert("Failed to add book to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Error adding book to cart");
+    }
+  };
+
   return (
     <>
       <Dialog open={book !== null} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-1 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-6 h-6 text-gray-600" />
-          </button>
-
-          <div className="flex flex-col gap-6 pt-10 sm:pt-0">
+          <div className="flex flex-col gap-6 pt-6 sm:pt-0">
             {/* Image Carousel */}
             <div className="relative bg-gray-100 rounded-lg overflow-hidden">
               <div className="aspect-square sm:aspect-video relative">
