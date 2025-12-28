@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ShoppingCart } from "lucide-react";
 import BookDetailModal from "./BookDetailModal";
 
 export interface Book {
