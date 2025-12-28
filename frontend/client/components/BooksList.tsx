@@ -115,35 +115,75 @@ export default function BooksList() {
 
   const books = placeholderBooks;
 
+  const handleAddToCart = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    book: Book
+  ) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch("http://localhost:8000/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookId: book.id,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Book added to cart!");
+      } else {
+        alert("Failed to add book to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Error adding book to cart");
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {books.map((book) => (
-          <button
+          <div
             key={book.id}
-            onClick={() => setSelectedBook(book)}
-            className="group flex flex-col gap-3 text-left transition-transform hover:scale-105 active:scale-95"
+            className="group flex flex-col gap-3 text-left"
           >
-            {/* Book Cover Image */}
-            <div className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md">
+            {/* Book Cover Image - Clickable */}
+            <button
+              onClick={() => setSelectedBook(book)}
+              className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+            >
               <img
                 src={book.coverImage}
                 alt={book.title}
                 className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
               />
-            </div>
+            </button>
 
             {/* Book Info */}
-            <div className="flex flex-col gap-1">
-              <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
-                {book.title}
-              </h3>
-              <p className="text-sm text-gray-600">{book.author}</p>
-              <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
-                {book.category}
-              </span>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-2">
+                  {book.title}
+                </h3>
+                <p className="text-sm text-gray-600">{book.author}</p>
+                <span className="text-xs font-medium text-[#6750A4] bg-[#F3E5F5] px-2 py-1 rounded w-fit">
+                  {book.category}
+                </span>
+              </div>
+
+              {/* Add to Cart Button */}
+              <button
+                onClick={(e) => handleAddToCart(e, book)}
+                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition-colors"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </button>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 
