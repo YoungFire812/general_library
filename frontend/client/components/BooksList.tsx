@@ -103,6 +103,7 @@ const placeholderBooks: Book[] = [
 
 export default function BooksList() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
 
   // TODO: Replace with actual API call
   // const { data: books } = useQuery({
