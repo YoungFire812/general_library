@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import BookDetailModal from "./BookDetailModal";
+import ImageLightbox from "./ImageLightbox";
 
 export interface Book {
   id: string;
