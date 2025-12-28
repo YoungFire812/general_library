@@ -2,18 +2,13 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Minus, Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Book } from "./BooksList";
 
 interface ExchangeOfferModalProps {
   book: Book | null;
   open: boolean;
   onClose: () => void;
-}
-
-interface SelectedBook {
-  bookId: string;
-  quantity: number;
 }
 
 // Placeholder books for the user's library - Replace with API data later
@@ -97,50 +92,43 @@ export default function ExchangeOfferModal({
   open,
   onClose,
 }: ExchangeOfferModalProps) {
-  const [selectedBooks, setSelectedBooks] = useState<SelectedBook[]>([]);
+  const [selectedBookIds, setSelectedBookIds] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<string>("");
 
   if (!book) return null;
 
   const toggleBookSelection = (bookId: string) => {
-    setSelectedBooks((prev) => {
-      const existing = prev.find((b) => b.bookId === bookId);
-      if (existing) {
-        return prev.filter((b) => b.bookId !== bookId);
+    setSelectedBookIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(bookId)) {
+        newSet.delete(bookId);
       } else {
-        return [...prev, { bookId, quantity: 1 }];
+        newSet.add(bookId);
       }
+      return newSet;
     });
-  };
-
-  const updateQuantity = (bookId: string, quantity: number) => {
-    if (quantity < 1) return;
-    setSelectedBooks((prev) =>
-      prev.map((b) => (b.bookId === bookId ? { ...b, quantity } : b))
-    );
   };
 
   const removeSelectedBook = (bookId: string) => {
-    setSelectedBooks((prev) => prev.filter((b) => b.bookId !== bookId));
-  };
-
-  const isBookSelected = (bookId: string) => {
-    return selectedBooks.some((b) => b.bookId === bookId);
-  };
-
-  const getSelectedBookQuantity = (bookId: string) => {
-    return selectedBooks.find((b) => b.bookId === bookId)?.quantity || 0;
-  };
-
-  const getSelectedBooksDetails = () => {
-    return selectedBooks.map((sb) => {
-      const bookDetail = placeholderUserBooks.find((b) => b.id === sb.bookId);
-      return { ...bookDetail, quantity: sb.quantity };
+    setSelectedBookIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(bookId);
+      return newSet;
     });
   };
 
+  const isBookSelected = (bookId: string) => {
+    return selectedBookIds.has(bookId);
+  };
+
+  const getSelectedBooksDetails = () => {
+    return Array.from(selectedBookIds).map((bookId) =>
+      placeholderUserBooks.find((b) => b.id === bookId)
+    );
+  };
+
   const handleSendOffer = () => {
-    if (selectedBooks.length === 0) {
+    if (selectedBookIds.size === 0) {
       alert("Please select at least one book to offer");
       return;
     }
@@ -150,14 +138,14 @@ export default function ExchangeOfferModal({
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({
-    //     offeredBooks: selectedBooks,
+    //     offeredBookIds: Array.from(selectedBookIds),
     //     requestedBookId: book.id,
     //     message: message,
     //   }),
     // });
 
     console.log("Exchange offer submitted:", {
-      offeredBooks: selectedBooks,
+      offeredBookIds: Array.from(selectedBookIds),
       requestedBookId: book.id,
       message: message,
     });
@@ -167,7 +155,7 @@ export default function ExchangeOfferModal({
   };
 
   const handleClose = () => {
-    setSelectedBooks([]);
+    setSelectedBookIds(new Set());
     setMessage("");
     onClose();
   };
@@ -176,7 +164,7 @@ export default function ExchangeOfferModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Propose Book Exchange
@@ -212,31 +200,18 @@ export default function ExchangeOfferModal({
             {/* Offered Books Summary */}
             <div className="flex-1 flex flex-col gap-2">
               <span className="text-xs text-gray-500 uppercase tracking-wide">
-                You offer ({selectedBooks.length})
+                You offer ({selectedBookIds.size})
               </span>
               {selectedBooksDetails.length > 0 ? (
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap">
                   {selectedBooksDetails.map((sb) => (
-                    <div
+                    <img
                       key={sb?.id}
-                      className="flex gap-2 items-center bg-white p-2 rounded border border-[#6750A4]"
-                    >
-                      <img
-                        src={sb?.coverImage}
-                        alt={sb?.title}
-                        className="w-8 h-10 object-cover rounded"
-                      />
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-medium text-gray-900 line-clamp-1 max-w-[80px]">
-                          {sb?.title}
-                        </span>
-                        {sb?.quantity && sb.quantity > 1 && (
-                          <span className="text-xs bg-[#6750A4] text-white px-2 py-0.5 rounded">
-                            x{sb.quantity}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                      src={sb?.coverImage}
+                      alt={sb?.title}
+                      title={sb?.title}
+                      className="w-8 h-11 object-cover rounded border-2 border-[#6750A4]"
+                    />
                   ))}
                 </div>
               ) : (
@@ -254,27 +229,27 @@ export default function ExchangeOfferModal({
                 Select Books from Your Library
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                Click on books to select them, adjust quantities as needed
+                Click on books to select them for the exchange
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-white">
               {placeholderUserBooks.map((userBook) => {
                 const isSelected = isBookSelected(userBook.id);
-                const quantity = getSelectedBookQuantity(userBook.id);
 
                 return (
-                  <div
+                  <button
                     key={userBook.id}
-                    className={`flex flex-col gap-2 p-2 rounded-lg border-2 transition-all cursor-pointer ${
+                    onClick={() => toggleBookSelection(userBook.id)}
+                    className={`flex flex-col gap-1 p-1.5 rounded-lg border-2 transition-all ${
                       isSelected
                         ? "border-[#6750A4] bg-[#F3E5F5]"
                         : "border-gray-200 bg-white hover:border-[#6750A4]"
                     }`}
-                    onClick={() => toggleBookSelection(userBook.id)}
+                    title={userBook.title}
                   >
                     {/* Book Cover */}
-                    <div className="relative">
+                    <div className="relative w-full">
                       <img
                         src={userBook.coverImage}
                         alt={userBook.title}
@@ -282,50 +257,13 @@ export default function ExchangeOfferModal({
                       />
                       {isSelected && (
                         <div className="absolute inset-0 bg-[#6750A4]/20 rounded flex items-center justify-center">
-                          <div className="bg-[#6750A4] text-white rounded-full p-2">
+                          <div className="bg-[#6750A4] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                             ✓
                           </div>
                         </div>
                       )}
                     </div>
-
-                    {/* Book Title and Author */}
-                    <div className="flex-1">
-                      <h4 className="text-xs font-semibold text-gray-900 line-clamp-2">
-                        {userBook.title}
-                      </h4>
-                      <p className="text-xs text-gray-600 line-clamp-1">
-                        {userBook.author}
-                      </p>
-                    </div>
-
-                    {/* Quantity Selector - Only show when selected */}
-                    {isSelected && (
-                      <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-1.5 py-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateQuantity(userBook.id, quantity - 1);
-                          }}
-                          className="p-0.5 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          <Minus className="w-3 h-3 text-gray-600" />
-                        </button>
-                        <span className="flex-1 text-center text-sm font-semibold text-gray-900 min-w-[20px]">
-                          {quantity}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateQuantity(userBook.id, quantity + 1);
-                          }}
-                          className="p-0.5 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          <Plus className="w-3 h-3 text-gray-600" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -355,7 +293,7 @@ export default function ExchangeOfferModal({
           {selectedBooksDetails.length > 0 && (
             <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-lg">
               <h4 className="font-semibold text-gray-900">Your Offer</h4>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {selectedBooksDetails.map((sb) => (
                   <div
                     key={sb?.id}
@@ -367,8 +305,8 @@ export default function ExchangeOfferModal({
                         alt={sb?.title}
                         className="w-10 h-14 object-cover rounded flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <h5 className="font-semibold text-sm text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-semibold text-sm text-gray-900 line-clamp-2">
                           {sb?.title}
                         </h5>
                         <p className="text-xs text-gray-600">{sb?.author}</p>
@@ -377,17 +315,12 @@ export default function ExchangeOfferModal({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-sm font-semibold text-gray-900 w-6 text-center">
-                        x{sb?.quantity}
-                      </span>
-                      <button
-                        onClick={() => removeSelectedBook(sb?.id || "")}
-                        className="p-1 hover:bg-red-50 rounded transition-colors"
-                      >
-                        <X className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => removeSelectedBook(sb?.id || "")}
+                      className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                    >
+                      <X className="w-4 h-4 text-red-600" />
+                    </button>
                   </div>
                 ))}
               </div>
