@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Star, MessageCircle, Trash2 } from "lucide-react";
+import { Star, MessageCircle, Trash2, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import ReviewSection from "@/components/ReviewSection";
+import LeaveReviewForm from "@/components/LeaveReviewForm";
 
 interface UserBook {
   id: string;
@@ -61,11 +63,33 @@ const mockReviews: Review[] = [
 
 export default function Account() {
   const [userBooks, setUserBooks] = useState<UserBook[]>(mockUserBooks);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [averageRating] = useState(4.7);
   const [totalReviews] = useState(mockReviews.length);
 
   const handleDeleteBook = (bookId: string) => {
     setUserBooks((prev) => prev.filter((book) => book.id !== bookId));
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddReview = (name: string, text: string, rating: number) => {
+    const newReview: Review = {
+      author: name,
+      text,
+      rating,
+    };
+    setReviews([newReview, ...reviews]);
   };
 
   const renderStars = (rating: number) => {
@@ -89,11 +113,30 @@ export default function Account() {
         <div className="flex flex-col gap-8">
           {/* Profile Section */}
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold">
-                JD
+            {/* Avatar with Upload */}
+            <div className="flex-shrink-0 relative">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold overflow-hidden">
+                {profilePhoto ? (
+                  <img
+                    src={profilePhoto}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  "JD"
+                )}
               </div>
+
+              {/* Upload Photo Button */}
+              <label className="absolute bottom-0 right-0 bg-[#6750A4] hover:bg-[#5a4494] text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+                <Upload className="w-4 h-4" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </label>
             </div>
 
             {/* User Info */}
@@ -131,24 +174,24 @@ export default function Account() {
 
           {/* Books Section */}
           <div className="pt-8 border-t border-gray-200">
-            {/* Announcement Banner */}
-            <div className="mb-8 bg-gradient-to-r from-[#6750A4] to-[#5a4494] rounded-lg p-6 sm:p-8 text-white">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2">My Book Collection</h2>
-              <p className="text-purple-100">
+            {/* Announcement Banner - Smaller */}
+            <div className="mb-6 bg-gradient-to-r from-[#6750A4] to-[#5a4494] rounded-lg p-4 text-white">
+              <h2 className="text-lg sm:text-xl font-bold mb-1">My Book Collection</h2>
+              <p className="text-sm text-purple-100">
                 {userBooks.length} book{userBooks.length !== 1 ? "s" : ""} available for exchange
               </p>
             </div>
 
             {userBooks.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600 mb-4">No books in your library yet</p>
+              <div className="text-center py-8">
+                <p className="text-gray-600 text-sm">No books in your library yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                 {userBooks.map((book) => (
                   <div
                     key={book.id}
-                    className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-gray-200"
+                    className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow border border-gray-200"
                   >
                     {/* Book Image */}
                     <div className="aspect-[3/4] overflow-hidden bg-gray-200">
@@ -160,21 +203,20 @@ export default function Account() {
                     </div>
 
                     {/* Book Info */}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">
+                    <div className="p-2">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2 text-xs mb-0.5">
                         {book.title}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-3">{book.author}</p>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Added {new Date(book.dateAdded).toLocaleDateString()}
+                      <p className="text-xs text-gray-600 line-clamp-1 mb-2">
+                        {book.author}
                       </p>
 
                       {/* Delete Button */}
                       <button
                         onClick={() => handleDeleteBook(book.id)}
-                        className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded transition-colors"
+                        className="w-full flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-1 rounded text-xs transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                         Remove
                       </button>
                     </div>
@@ -184,33 +226,11 @@ export default function Account() {
             )}
           </div>
 
-          {/* Reviews Section */}
-          <div className="pt-8 border-t border-gray-200">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">
-              Community Reviews
-            </h2>
+          {/* Reviews Section - Now Modular */}
+          <ReviewSection reviews={reviews} />
 
-            {mockReviews.length === 0 ? (
-              <p className="text-gray-600">No reviews yet</p>
-            ) : (
-              <div className="space-y-6">
-                {mockReviews.map((review, index) => (
-                  <div
-                    key={index}
-                    className="bg-gradient-to-r from-gray-50 to-white rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900 text-lg">
-                        {review.author}
-                      </h3>
-                      {renderStars(review.rating)}
-                    </div>
-                    <p className="text-gray-700 leading-relaxed">{review.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Leave Review Form - Now Modular and Easily Removable */}
+          <LeaveReviewForm onSubmit={handleAddReview} />
         </div>
       </main>
     </div>
