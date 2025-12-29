@@ -26,6 +26,15 @@ export default function Header({ onOpenUpload }: { onOpenUpload?: () => void }) 
               <span className="hidden sm:inline">Cart</span>
             </Link>
 
+            {/* Messages Icon */}
+            <Link
+              to="/messages"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="hidden sm:inline">Messages</span>
+            </Link>
+
             {/* Account Link */}
             <Link
               to="/account"
