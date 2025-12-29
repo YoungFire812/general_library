@@ -28,7 +28,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/account" element={<Placeholder title="Аккаунт" />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/upload" element={<Placeholder title="Загрузить книгу" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
