@@ -73,17 +73,30 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
                   className="w-full h-full object-contain group-hover/modal-image:opacity-80 transition-opacity"
                 />
 
+                {/* Overlay on hover to show it's clickable */}
+                <div className="absolute inset-0 bg-black/0 group-hover/modal-image:bg-black/20 transition-colors flex items-center justify-center">
+                  <p className="text-white opacity-0 group-hover/modal-image:opacity-100 transition-opacity font-semibold text-sm">
+                    Click to Enlarge
+                  </p>
+                </div>
+
                 {/* Navigation arrows */}
                 {images.length > 1 && (
                   <>
                     <button
-                      onClick={prevImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevImage();
+                      }}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button
-                      onClick={nextImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextImage();
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
                     >
                       <ChevronRight className="w-6 h-6" />
