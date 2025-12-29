@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
 import ExchangeOfferModal from "./ExchangeOfferModal";
+import ImageLightbox from "./ImageLightbox";
 import { Book } from "./BooksList";
 
 interface BookDetailModalProps {
@@ -13,6 +14,7 @@ interface BookDetailModalProps {
 export default function BookDetailModal({ book, onClose }: BookDetailModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openExchange, setOpenExchange] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
 
   if (!book) return null;
 
@@ -56,29 +58,56 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
 
   return (
     <>
-      <Dialog open={book !== null} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6">
+      <Dialog
+        open={book !== null}
+        onOpenChange={(isOpen) => {
+          // Don't close the dialog if lightbox is open
+          if (!isOpen && lightboxImages) {
+            return;
+          }
+          if (!isOpen) {
+            onClose();
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 [&>button]:hidden">
           <div className="flex flex-col gap-6 pt-6 sm:pt-0">
-            {/* Image Carousel */}
-            <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-              <div className="aspect-square sm:aspect-video relative">
+            {/* Image Carousel - Clickable for lightbox */}
+            <div
+              className="relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer group/modal-image"
+              onClick={() => setLightboxImages(book.images || [book.coverImage])}
+            >
+              <div className="aspect-square sm:aspect-square relative">
                 <img
                   src={currentImage}
                   alt={book.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain group-hover/modal-image:opacity-80 transition-opacity"
                 />
+
+                {/* Overlay on hover to show it's clickable */}
+                <div className="absolute inset-0 bg-black/0 group-hover/modal-image:bg-black/20 transition-colors flex items-center justify-center">
+                  <p className="text-white opacity-0 group-hover/modal-image:opacity-100 transition-opacity font-semibold text-sm">
+                    Click to Enlarge
+                  </p>
+                </div>
 
                 {/* Navigation arrows */}
                 {images.length > 1 && (
                   <>
                     <button
-                      onClick={prevImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevImage();
+                      }}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button
-                      onClick={nextImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextImage();
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
                     >
                       <ChevronRight className="w-6 h-6" />
@@ -137,7 +166,7 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
               <div className="flex flex-col gap-3 pt-4">
                 <Button
                   onClick={handleAddToCart}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Add to Cart
@@ -145,7 +174,7 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => setOpenExchange(true)}
-                    className="flex-1 bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors"
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors"
                   >
                     Propose Exchange
                   </Button>
@@ -162,6 +191,14 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox for enlarged view */}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          onClose={() => setLightboxImages(null)}
+        />
+      )}
 
       <ExchangeOfferModal
         book={book}

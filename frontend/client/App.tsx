@@ -9,6 +9,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Index from "./pages/Index";
 import Cart from "./pages/Cart";
+import Account from "./pages/Account";
+import Messages from "./pages/Messages";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
@@ -26,7 +28,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/account" element={<Placeholder title="Аккаунт" />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/upload" element={<Placeholder title="Загрузить книгу" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -30,7 +30,29 @@ export default function Cart() {
         }
 
         const data = await response.json();
-        setCartItems(data.items || []);
+        let items = data.items || [];
+
+        // Add test items if cart is empty for testing purposes
+        if (items.length === 0) {
+          items = [
+            {
+              id: "1",
+              title: "The Great Gatsby",
+              author: "F. Scott Fitzgerald",
+              category: "Fiction",
+              coverImage: "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
+            },
+            {
+              id: "2",
+              title: "To Kill a Mockingbird",
+              author: "Harper Lee",
+              category: "Fiction",
+              coverImage: "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
+            },
+          ];
+        }
+
+        setCartItems(items);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load cart"
@@ -211,7 +233,7 @@ export default function Cart() {
 
                   <Button
                     onClick={handleCheckout}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                    className="w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors"
                   >
                     Proceed to Checkout
                   </Button>

@@ -9,6 +9,14 @@ interface ImageLightboxProps {
 export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const nextImage = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const previousImage = () => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -22,24 +30,18 @@ export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex]);
-
-  const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const previousImage = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [onClose, nextImage, previousImage]);
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 pointer-events-auto"
       onClick={onClose}
+      role="button"
+      tabIndex={-1}
     >
       {/* Content Container */}
       <div
-        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image */}
