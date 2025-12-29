@@ -22,7 +22,7 @@ export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex]);
+  }, [onClose, currentIndex]);
 
   const nextImage = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
