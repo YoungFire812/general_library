@@ -9,6 +9,14 @@ interface ImageLightboxProps {
 export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const nextImage = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const previousImage = () => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -22,15 +30,7 @@ export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, currentIndex]);
-
-  const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const previousImage = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [onClose, nextImage, previousImage]);
 
   return (
     <div
