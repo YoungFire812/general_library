@@ -58,7 +58,18 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
 
   return (
     <>
-      <Dialog open={book !== null} onOpenChange={onClose}>
+      <Dialog
+        open={book !== null}
+        onOpenChange={(isOpen) => {
+          // Don't close the dialog if lightbox is open
+          if (!isOpen && lightboxImages) {
+            return;
+          }
+          if (!isOpen) {
+            onClose();
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 [&>button]:hidden">
           <div className="flex flex-col gap-6 pt-6 sm:pt-0">
             {/* Image Carousel - Clickable for lightbox */}
