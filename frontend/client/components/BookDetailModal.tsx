@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
 import ExchangeOfferModal from "./ExchangeOfferModal";
+import ImageLightbox from "./ImageLightbox";
 import { Book } from "./BooksList";
 
 interface BookDetailModalProps {
