@@ -59,15 +59,18 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
   return (
     <>
       <Dialog open={book !== null} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 [&>button]:hidden">
           <div className="flex flex-col gap-6 pt-6 sm:pt-0">
-            {/* Image Carousel */}
-            <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-              <div className="aspect-square sm:aspect-video relative">
+            {/* Image Carousel - Clickable for lightbox */}
+            <div
+              className="relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer group/modal-image"
+              onClick={() => setLightboxImages(book.images || [book.coverImage])}
+            >
+              <div className="aspect-square sm:aspect-square relative">
                 <img
                   src={currentImage}
                   alt={book.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain group-hover/modal-image:opacity-80 transition-opacity"
                 />
 
                 {/* Navigation arrows */}
