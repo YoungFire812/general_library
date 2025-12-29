@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Home } from "lucide-react";
+import { ShoppingCart, Home, MessageSquare } from "lucide-react";
 
 export default function Header({ onOpenUpload }: { onOpenUpload?: () => void }) {
   return (
