@@ -152,21 +152,21 @@ export default function BooksList() {
             key={book.id}
             className="group flex flex-col gap-3 text-left"
           >
-            {/* Book Cover Image - Clickable for lightbox */}
+            {/* Book Cover Image - Clickable to open product details */}
             <div
-              className="relative h-64 sm:h-72 bg-gray-200 rounded-lg overflow-hidden shadow-md cursor-pointer group/image"
-              onClick={() => setLightboxImages(book.images || [book.coverImage])}
+              className="relative h-80 sm:h-96 bg-gray-200 rounded-lg overflow-hidden shadow-md cursor-pointer group/image"
+              onClick={() => setSelectedBook(book)}
             >
               <img
                 src={book.coverImage}
                 alt={book.title}
-                className="w-full h-full object-cover group-hover/image:opacity-80 transition-opacity"
+                className="w-full h-full object-contain group-hover/image:opacity-80 transition-opacity"
               />
 
               {/* Overlay on hover to show it's clickable */}
               <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors flex items-center justify-center">
                 <p className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity font-semibold text-sm">
-                  View full size
+                  View Details
                 </p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function BooksList() {
               {/* Add to Cart Button - Rectangular, lower position */}
               <button
                 onClick={(e) => handleAddToCart(e, book)}
-                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded transition-colors mt-1"
+                className="flex items-center justify-center gap-2 w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-2.5 rounded transition-colors mt-1"
                 title="Add to cart"
               >
                 <ShoppingCart className="w-4 h-4" />
