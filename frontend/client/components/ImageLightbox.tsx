@@ -34,12 +34,14 @@ export default function ImageLightbox({ images, onClose }: ImageLightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 pointer-events-auto"
       onClick={onClose}
+      role="button"
+      tabIndex={-1}
     >
       {/* Content Container */}
       <div
-        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image */}
