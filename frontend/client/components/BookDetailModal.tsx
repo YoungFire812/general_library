@@ -181,6 +181,14 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
         </DialogContent>
       </Dialog>
 
+      {/* Image Lightbox for enlarged view */}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          onClose={() => setLightboxImages(null)}
+        />
+      )}
+
       <ExchangeOfferModal
         book={book}
         open={openExchange}
