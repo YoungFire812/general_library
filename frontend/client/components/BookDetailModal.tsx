@@ -14,6 +14,7 @@ interface BookDetailModalProps {
 export default function BookDetailModal({ book, onClose }: BookDetailModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openExchange, setOpenExchange] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
 
   if (!book) return null;
 
