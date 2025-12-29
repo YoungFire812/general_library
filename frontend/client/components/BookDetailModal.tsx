@@ -155,7 +155,7 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
               <div className="flex flex-col gap-3 pt-4">
                 <Button
                   onClick={handleAddToCart}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Add to Cart
@@ -163,7 +163,7 @@ export default function BookDetailModal({ book, onClose }: BookDetailModalProps)
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => setOpenExchange(true)}
-                    className="flex-1 bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors"
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors"
                   >
                     Propose Exchange
                   </Button>
