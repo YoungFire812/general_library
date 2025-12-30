@@ -121,6 +121,11 @@ export default function BooksList() {
 
   const books = placeholderBooks;
 
+  // Pagination logic
+  const totalPages = Math.ceil(books.length / BOOKS_PER_PAGE);
+  const startIndex = (currentPage - 1) * BOOKS_PER_PAGE;
+  const paginatedBooks = books.slice(startIndex, startIndex + BOOKS_PER_PAGE);
+
   const handleAddToCart = async (
     e: React.MouseEvent<HTMLButtonElement>,
     book: Book
