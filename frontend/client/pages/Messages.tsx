@@ -177,8 +177,7 @@ export default function Messages() {
 
         <div className="flex-1 flex gap-0 sm:gap-6 min-h-0 rounded-xl overflow-hidden sm:overflow-visible">
           {/* Left Sidebar - Conversations List */}
-          {!isMobileViewChat && (
-            <div className="w-full sm:w-96 bg-white rounded-none sm:rounded-xl shadow-sm flex flex-col overflow-hidden">
+          <div className={`${!isMobileViewChat ? 'flex' : 'hidden'} sm:flex w-full sm:w-96 bg-white rounded-none sm:rounded-xl shadow-sm flex-col overflow-hidden`}>
               {/* Search Bar */}
               <div className="p-4 border-b border-gray-200">
                 <div className="relative">
@@ -238,8 +237,7 @@ export default function Messages() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
+          </div>
 
           {/* Right Chat Area */}
           {selectedConversation ? (
