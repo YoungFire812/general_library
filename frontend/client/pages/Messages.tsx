@@ -170,8 +170,6 @@ export default function Messages() {
         {/* Header - Hidden on mobile when in chat view */}
         {!isMobileViewChat && (
           <div className="hidden sm:flex flex-col gap-2 mb-6 px-4 sm:px-0">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Messages</h1>
-            <p className="text-gray-600">Connect and exchange with the community</p>
           </div>
         )}
 
