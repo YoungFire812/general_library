@@ -165,10 +165,15 @@ export default function Cart() {
                     Items ({cartItems.length})
                   </h2>
                   <div className="space-y-3">
-                    {cartItems.map((item) => (
+                    {paginatedItems.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-lg p-4 flex gap-4 items-start"
+                        onClick={() => handleExchange(item)}
+                        className={`bg-white rounded-lg p-4 flex gap-4 items-start cursor-pointer transition-all ${
+                          selectedItem?.id === item.id
+                            ? "ring-2 ring-[#6750A4] shadow-md"
+                            : "hover:shadow-md hover:ring-2 hover:ring-gray-300"
+                        }`}
                       >
                         {/* Book Image */}
                         <img
@@ -188,17 +193,41 @@ export default function Cart() {
                           </span>
                         </div>
 
-                        {/* Remove Button */}
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          className="p-2 hover:bg-red-50 rounded transition-colors flex-shrink-0"
-                          title="Remove from cart"
-                        >
-                          <Trash2 className="w-5 h-5 text-red-600" />
-                        </button>
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExchange(item);
+                            }}
+                            className="p-2 hover:bg-purple-50 rounded transition-colors"
+                            title="Exchange this book"
+                          >
+                            <Send className="w-5 h-5 text-[#6750A4]" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveItem(item.id);
+                            }}
+                            className="p-2 hover:bg-red-50 rounded transition-colors"
+                            title="Remove from basket"
+                          >
+                            <Trash2 className="w-5 h-5 text-red-600" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  )}
                 </div>
               </div>
 
