@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import BookDetailModal from "./BookDetailModal";
 import ImageLightbox from "./ImageLightbox";
+import Pagination from "./Pagination";
 
 export interface Book {
   id: string;
