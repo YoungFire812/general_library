@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, Trash2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Trash2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Pagination from "@/components/Pagination";
+import ExchangeOfferModal from "@/components/ExchangeOfferModal";
 
 interface CartItem {
   id: string;
