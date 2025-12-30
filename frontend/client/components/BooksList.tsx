@@ -102,9 +102,12 @@ const placeholderBooks: Book[] = [
   },
 ];
 
+const BOOKS_PER_PAGE = 6;
+
 export default function BooksList() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // TODO: Replace with actual API call
   // const { data: books } = useQuery({
