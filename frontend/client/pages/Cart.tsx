@@ -133,7 +133,7 @@ export default function Cart() {
             <div className="flex-1" />
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 flex items-center gap-3">
               <ShoppingCart className="w-8 h-8" />
-              Shopping Cart
+              My Basket
             </h1>
           </div>
 
