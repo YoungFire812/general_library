@@ -212,6 +212,15 @@ export default function BooksList() {
         ))}
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+
       {/* Image Lightbox */}
       {lightboxImages && (
         <ImageLightbox
