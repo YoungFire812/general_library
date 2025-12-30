@@ -255,16 +255,11 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={handleCheckout}
-                    className="w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Start Exchange
-                  </Button>
-
-                  <p className="text-xs text-gray-500 text-center mt-4">
-                    Exchange one book at a time via Messages
-                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs text-blue-900 text-center">
+                      Click on a book card to start an exchange. Exchange one book at a time.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
