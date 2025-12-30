@@ -90,18 +90,16 @@ export default function Cart() {
       });
 
       if (response.ok) {
-        alert("Order placed successfully!");
-        setCartItems([]);
+        alert("Ready to exchange! Visit Messages to start an exchange with a user.");
+        // Don't clear items - keep them in basket for future exchanges
       } else {
-        // For development, allow checkout even if API not implemented
-        alert("Order placed successfully!");
-        setCartItems([]);
+        // For development, allow exchange even if API not implemented
+        alert("Ready to exchange! Visit Messages to start an exchange with a user.");
       }
     } catch (error) {
-      console.error("Error during checkout:", error);
-      // For development, allow checkout even if API not implemented
-      alert("Order placed successfully!");
-      setCartItems([]);
+      console.error("Error during exchange:", error);
+      // For development, allow exchange even if API not implemented
+      alert("Ready to exchange! Visit Messages to start an exchange with a user.");
     }
   };
 
