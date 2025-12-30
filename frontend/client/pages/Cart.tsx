@@ -209,19 +209,19 @@ export default function Cart() {
               <div className="lg:col-span-1">
                 <div className="bg-gray-50 rounded-lg p-6 sticky top-20">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Summary
+                    Basket Summary
                   </h2>
 
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Books in cart</span>
+                      <span className="text-gray-600">Books in basket</span>
                       <span className="font-semibold text-gray-900">
                         {cartItems.length}
                       </span>
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between">
-                        <span className="font-semibold text-gray-900">Total</span>
+                        <span className="font-semibold text-gray-900">Available</span>
                         <span className="font-bold text-lg text-[#6750A4]">
                           {cartItems.length} books
                         </span>
@@ -233,11 +233,11 @@ export default function Cart() {
                     onClick={handleCheckout}
                     className="w-full bg-[#6750A4] hover:bg-[#5a4494] text-white font-semibold py-3 rounded-lg transition-colors"
                   >
-                    Proceed to Checkout
+                    Start Exchange
                   </Button>
 
                   <p className="text-xs text-gray-500 text-center mt-4">
-                    TODO: Add payment integration
+                    Exchange one book at a time via Messages
                   </p>
                 </div>
               </div>
