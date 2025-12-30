@@ -84,31 +84,23 @@ export default function Cart() {
     }
   };
 
-  const handleCheckout = async () => {
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: cartItems.map((item) => item.id),
-        }),
-      });
-
-      if (response.ok) {
-        alert("Ready to exchange! Visit Messages to start an exchange with a user.");
-        // Don't clear items - keep them in basket for future exchanges
-      } else {
-        // For development, allow exchange even if API not implemented
-        alert("Ready to exchange! Visit Messages to start an exchange with a user.");
-      }
-    } catch (error) {
-      console.error("Error during exchange:", error);
-      // For development, allow exchange even if API not implemented
-      alert("Ready to exchange! Visit Messages to start an exchange with a user.");
-    }
+  const handleExchange = (item: CartItem) => {
+    setSelectedItem(item);
+    setOpenExchange(true);
   };
+
+  const handleCloseExchange = () => {
+    setSelectedItem(null);
+    setOpenExchange(false);
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(cartItems.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedItems = cartItems.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   if (loading) {
     return (
