@@ -271,6 +271,23 @@ export default function Cart() {
           )}
         </div>
       </main>
+
+      {/* Exchange Offer Modal */}
+      {selectedItem && (
+        <ExchangeOfferModal
+          book={{
+            id: selectedItem.id,
+            title: selectedItem.title,
+            author: selectedItem.author,
+            category: selectedItem.category,
+            coverImage: selectedItem.coverImage,
+            images: [selectedItem.coverImage],
+            description: "",
+          }}
+          open={openExchange}
+          onClose={handleCloseExchange}
+        />
+      )}
     </div>
   );
 }
