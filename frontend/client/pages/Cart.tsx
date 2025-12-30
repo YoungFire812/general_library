@@ -147,10 +147,10 @@ export default function Cart() {
             <div className="text-center py-16">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Your cart is empty
+                Your basket is empty
               </h2>
               <p className="text-gray-600 mb-6">
-                Start adding books to your cart to exchange!
+                Start adding books to your basket to exchange!
               </p>
               <Link
                 to="/"
