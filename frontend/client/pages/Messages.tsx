@@ -167,18 +167,9 @@ export default function Messages() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <main className="container mx-auto px-0 sm:px-8 h-screen flex flex-col py-0 sm:py-6">
-        {/* Header - Hidden on mobile when in chat view */}
-        {!isMobileViewChat && (
-          <div className="hidden sm:flex flex-col gap-2 mb-6 px-4 sm:px-0">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Messages</h1>
-            <p className="text-gray-600">Connect and exchange with the community</p>
-          </div>
-        )}
-
         <div className="flex-1 flex gap-0 sm:gap-6 min-h-0 rounded-xl overflow-hidden sm:overflow-visible">
           {/* Left Sidebar - Conversations List */}
-          {!isMobileViewChat && (
-            <div className="w-full sm:w-96 bg-white rounded-none sm:rounded-xl shadow-sm flex flex-col overflow-hidden">
+          <div className={`${!isMobileViewChat ? 'flex' : 'hidden'} sm:flex w-full sm:w-96 bg-white rounded-none sm:rounded-xl shadow-sm flex-col overflow-hidden`}>
               {/* Search Bar */}
               <div className="p-4 border-b border-gray-200">
                 <div className="relative">
@@ -238,8 +229,7 @@ export default function Messages() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
+          </div>
 
           {/* Right Chat Area */}
           {selectedConversation ? (
