@@ -14,10 +14,15 @@ interface CartItem {
   price?: number;
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function Cart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
+  const [openExchange, setOpenExchange] = useState(false);
 
   useEffect(() => {
     const fetchCart = async () => {
