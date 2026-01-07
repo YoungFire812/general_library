@@ -5,13 +5,16 @@ from src.models.models import Book, Category
 from src.schemas.books import BookCreate, BookUpdate
 from src.utils.responses import ResponseHandler
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
 
 
 class BookService:
     @staticmethod
-    async def get_all_books(db: AsyncSession, page: int, limit: int, search: str = ""):
+    async def get_books_limited(db: AsyncSession, page: int, limit: int, search: str = ""):
         result = await db.execute(
             select(Book)
+            .options(selectinload(Book.category))
             .order_by(Book.id.asc())
             .filter(Book.title.contains(search))
             .limit(limit)
@@ -19,8 +22,26 @@ class BookService:
         )
 
         books = result.scalars().all()
+        data = [
+            {
+                "id": book.id,
+                "title": book.title,
+                "author": book.author,
+                "description": book.description,
+                "stock": book.stock,
+                "thumbnail": book.thumbnail,
+                "images": book.images,
+                "is_published": book.is_published,
+                "created_at": book.created_at,
+                "category": book.category.name,
+            }
+            for book in books
+        ]
 
-        return {"message": f"Page {page} with {limit} books", "data": books}
+        return {
+            "message": f"Page {page} with {limit} books",
+            "data": data
+        }
 
     @staticmethod
     async def get_book(db: AsyncSession, book_id: int):

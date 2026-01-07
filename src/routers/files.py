@@ -13,7 +13,3 @@ async def upload_files(files: List[UploadFile] = File(...)):
         link = await upload_file_to_minio(file)
         uploaded_links.append(link)
     return await ResponseHandler.success("Success file upload", {"files": uploaded_links})
-
-@files_router.get("")
-async def upload_files():
-    return {"success": True, "message": "Its work"}

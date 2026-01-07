@@ -12,4 +12,8 @@ categories_router = APIRouter(prefix="/categories")
 async def create_category(category: CategoryCreate = Body(...), db: AsyncSession = Depends(get_db)):
     return await CategoryService.create_category(db, category)
 
+@categories_router.get("")
+async def get_all_categories(db: AsyncSession = Depends(get_db)):
+    return await CategoryService.get_all_categories(db)
+
 

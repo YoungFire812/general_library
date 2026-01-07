@@ -55,6 +55,6 @@ async def upload_file_to_minio(file: UploadFile):
         len(content)
     )
 
-    return f"http://{settings.MINIO_ENDPOINT}/{settings.MINIO_BUCKET}/{unique_filename}"
+    return f"http://localhost:{settings.MINIO_ENDPOINT.split(':')[-1]}/{settings.MINIO_BUCKET}/{unique_filename}"
 
 

@@ -5,102 +5,37 @@ import ImageLightbox from "./ImageLightbox";
 import Pagination from "./Pagination";
 
 export interface Book {
-  id: string;
+  id: number;
   title: string;
   author: string;
   category: string;
   description: string;
   images: string[];
-  coverImage: string;
+  thumbnail: string;
+  created_at: string;
+  is_published: boolean;
+  stock: boolean;
 }
 
+export const getBooks = async (page = 1, limit = 24) => {
+  try {
+    const response = await fetch(`http://localhost:8000/v1/books?page=${page}&limit=${limit}`);
+
+    if (!response.ok) {
+      throw new Error(`Ошибка сервера: ${response.status}`);
+    }
+
+    // Получаем массив объектов (словарей)
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("Ошибка при получении книг:", error);
+    return [];
+  }
+};
+
 // Placeholder data - Replace with API data later
-const placeholderBooks: Book[] = [
-  {
-    id: "1",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    category: "Fiction",
-    description:
-      "A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream.",
-    images: [
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1495446815901-a7297e3ffe02?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-  },
-  {
-    id: "2",
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    category: "Fiction",
-    description:
-      "A gripping tale of racial injustice and childhood innocence in the American South.",
-    images: [
-      "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
-  },
-  {
-    id: "3",
-    title: "1984",
-    author: "George Orwell",
-    category: "Science Fiction",
-    description:
-      "A dystopian novel depicting a totalitarian society and themes of surveillance and control.",
-    images: [
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    category: "Romance",
-    description:
-      "A timeless romance novel exploring love, social class, and personal growth in Regency England.",
-    images: [
-      "https://images.unsplash.com/photo-1548122328-c9526d6d1f6d?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1548122328-c9526d6d1f6d?w=400&h=600&fit=crop",
-  },
-  {
-    id: "5",
-    title: "The Catcher in the Rye",
-    author: "J.D. Salinger",
-    category: "Fiction",
-    description:
-      "A controversial novel following the teenage protagonist Holden Caulfield as he navigates adolescence.",
-    images: [
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1543002588-d4d8fca5f0b9?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-  },
-  {
-    id: "6",
-    title: "Brave New World",
-    author: "Aldous Huxley",
-    category: "Science Fiction",
-    description:
-      "A futuristic novel depicting a seemingly perfect world controlled through conditioning and drugs.",
-    images: [
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400&h=600&fit=crop",
-    ],
-    coverImage:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-  },
-];
+const placeholderBooks: Book[] = await getBooks();
 
 const BOOKS_PER_PAGE = 6;
 
@@ -169,7 +104,7 @@ export default function BooksList() {
               onClick={() => setSelectedBook(book)}
             >
               <img
-                src={book.coverImage}
+                src={book.thumbnail}
                 alt={book.title}
                 className="w-full h-full object-contain group-hover/image:opacity-80 transition-opacity"
               />

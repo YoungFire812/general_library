@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str
     MINIO_SECURE: bool
 
+    MODE: str
+    LOG_LEVEL: str
+
     class Config:
         case_sensitive = True
 
