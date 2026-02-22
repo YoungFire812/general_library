@@ -1,12 +1,9 @@
-from pydantic import BaseModel, ConfigDict, HttpUrl, Field
+from pydantic import BaseModel, ConfigDict, HttpUrl
 from datetime import datetime
 from typing import List
-from src.schemas.categories import CategoryBase
-
 
 
 class BookBase(BaseModel):
-    id: int
     title: str
     author: str
     description: str
@@ -21,33 +18,13 @@ class BookBase(BaseModel):
 
 
 # Create Book
-class BookCreate(BaseModel):
-    title: str
-    author: str
-    description: str
-    stock: bool
-    thumbnail: HttpUrl
-    images: List[HttpUrl]
-    is_published: bool
-    created_at: datetime
-    category_id: int
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
+class BookCreate(BookBase):
+    pass
 
 
 # Update Book
-class BookUpdate(BaseModel):
-    title: str
-    author: str
-    description: str
-    stock: bool
-    thumbnail: HttpUrl
-    images: List[HttpUrl]
-    is_published: bool
-    created_at: datetime
-    category_id: int
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
+class BookUpdate(BookBase):
+    pass
 
 
 # Get Book

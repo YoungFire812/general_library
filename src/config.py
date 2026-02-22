@@ -18,4 +18,3 @@ class Config(BaseSettings):
     CORS_HEADERS: list[str]
 
     APP_VERSION: str = "1.0"
-

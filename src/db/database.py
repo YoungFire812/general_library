@@ -1,10 +1,8 @@
-import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
+from src.db.base import Base
 from sqlalchemy.orm import sessionmaker
 from typing import AsyncGenerator
 from src.core.config import settings
-from contextlib import asynccontextmanager
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from loguru import logger
@@ -19,7 +17,6 @@ engine = create_async_engine(
     pool_timeout=30,
 )
 
-Base = declarative_base()
 
 async def init_db():
     async with engine.begin() as conn:
@@ -40,12 +37,16 @@ async def get_db() -> AsyncGenerator:
             await session.commit()
         except SQLAlchemyError as e:
             await session.rollback()
-            logger.bind(database=True).exception("Критическая ошибка при работе с БД в транзакции")
+            logger.bind(database=True).exception(
+                "Критическая ошибка при работе с БД в транзакции"
+            )
             raise HTTPException(status_code=500, detail="Internal Database Error")
+        except HTTPException:
+            await session.rollback()
+            raise
         except Exception as e:
+            await session.rollback()
             logger.bind(critical=True).exception(f"Unexpected error: {e}")
             raise HTTPException(status_code=500, detail="Unexpected server error")
         finally:
             await session.close()
-
-

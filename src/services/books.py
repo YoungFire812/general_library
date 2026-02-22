@@ -1,17 +1,18 @@
 import traceback
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.models import Book, Category
+from src.models.models import Book
 from src.schemas.books import BookCreate, BookUpdate
 from src.utils.responses import ResponseHandler
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 
-
 class BookService:
     @staticmethod
-    async def get_books_limited(db: AsyncSession, page: int, limit: int, search: str = ""):
+    async def get_books_limited(
+        db: AsyncSession, page: int, limit: int, search: str = ""
+    ):
         result = await db.execute(
             select(Book)
             .options(selectinload(Book.category))
@@ -38,10 +39,7 @@ class BookService:
             for book in books
         ]
 
-        return {
-            "message": f"Page {page} with {limit} books",
-            "data": data
-        }
+        return {"message": f"Page {page} with {limit} books", "data": data}
 
     @staticmethod
     async def get_book(db: AsyncSession, book_id: int):
@@ -57,8 +55,8 @@ class BookService:
     async def create_book(db: AsyncSession, book: BookCreate):
         try:
             book_dict = book.model_dump()
-            book_dict['thumbnail'] = str(book_dict['thumbnail'])
-            book_dict['images'] = [str(url) for url in book_dict['images']]
+            book_dict["thumbnail"] = str(book_dict["thumbnail"])
+            book_dict["images"] = [str(url) for url in book_dict["images"]]
             db_book = Book(**book_dict)
             db.add(db_book)
             await db.commit()
