@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 
+
 class ResponseHandler:
     @staticmethod
     async def success(message, data=None):
@@ -28,12 +29,12 @@ class ResponseHandler:
     @staticmethod
     async def not_found_error(name="", id=None):
         message = f"{name} With Id {id} Not Found!"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+        raise HTTPException(status_code=404, detail=message)
 
     @staticmethod
     async def invalid_token(name=""):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid {name} token.",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )

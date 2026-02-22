@@ -11,8 +11,3 @@ class AuthConfig(BaseSettings):
     REFRESH_TOKEN_EXP: timedelta = timedelta(days=30)
 
     SECURE_COOKIES: bool = True
-
-
-
-
-
