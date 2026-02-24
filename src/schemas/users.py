@@ -11,10 +11,6 @@ class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
 
 
-class UserCreate(UserBase):
-    pass
-
-
 class UserRead(BaseModel):
     id: int
     username: str = Field(min_length=1, max_length=25)
