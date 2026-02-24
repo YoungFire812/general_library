@@ -35,7 +35,7 @@ async def get_db() -> AsyncGenerator:
         try:
             yield session
             await session.commit()
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             await session.rollback()
             logger.bind(database=True).exception(
                 "Критическая ошибка при работе с БД в транзакции"
