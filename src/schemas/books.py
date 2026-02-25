@@ -1,54 +1,43 @@
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl, Field
 from datetime import datetime
-from typing import List
+from typing import List, Optional
+from src.schemas.categories import CategoryRead
 
 
 class BookBase(BaseModel):
-    title: str
-    author: str
-    description: str
-    stock: bool
+    title: str = Field(min_length=1, max_length=25)
+    author: str = Field(min_length=1, max_length=25)
+    description: str = Field(min_length=1, max_length=350)
+    stock: bool = True
     thumbnail: HttpUrl
     images: List[HttpUrl]
-    is_published: bool
-    created_at: datetime
-    category_id: int
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
+    is_published: bool = True
+    category_id: int = Field(ge=1)
 
 
-# Create Book
 class BookCreate(BookBase):
     pass
 
+class BookUpdate(BaseModel):
+    title: Optional[str]
+    author: Optional[str]
+    description: Optional[str]
+    stock: Optional[bool]
+    thumbnail: Optional[HttpUrl]
+    images: Optional[List[HttpUrl]]
+    is_published: Optional[bool]
+    category_id: Optional[int]
 
-# Update Book
-class BookUpdate(BookBase):
-    pass
+class BookRead(BaseModel):
+    id: int
+    title: str = Field(min_length=1, max_length=25)
+    author: str = Field(min_length=1, max_length=25)
+    description: str = Field(min_length=1, max_length=350)
+    stock: bool = True
+    thumbnail: HttpUrl
+    images: List[HttpUrl]
+    is_published: bool = True
+    created_at: datetime
+    category: CategoryRead
 
-
-# Get Book
-class BookOut(BaseModel):
-    message: str
-    data: BookBase
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
-
-
-class BooksOut(BaseModel):
-    message: str
-    data: List[BookBase]
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
-
-
-# Delete Book
-class BookDelete(BookBase):
-    pass
-
-
-class BookOutDelete(BaseModel):
-    message: str
-    data: BookDelete
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
+    model_config = ConfigDict(from_attributes=True)

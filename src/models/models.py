@@ -87,7 +87,7 @@ class Book(Base):
     title = Column(String, nullable=False)
     author = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    stock = Column(Boolean, nullable=False)
+    stock = Column(Boolean, server_default="True", nullable=False)
     thumbnail = Column(String, nullable=False)
     images = Column(JSONB, default=[], nullable=False)
     is_published = Column(Boolean, server_default="True", nullable=False)
