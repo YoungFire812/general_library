@@ -19,7 +19,7 @@ class UserService:
 
         return ApiResponse(
             message=f"Data for user {user_id}",
-            data=UserRead.model_validate(db_user, from_attributes=True),
+            data=UserRead.model_validate(db_user),
         )
 
     @staticmethod

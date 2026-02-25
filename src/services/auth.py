@@ -34,7 +34,7 @@ class AuthService:
 
             return ApiResponse(
                 message="User created!",
-                data=UserRead.model_validate(db_user, from_attributes=True),
+                data=UserRead.model_validate(db_user),
             )
 
         except IntegrityError as e:
