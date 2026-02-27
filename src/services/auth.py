@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from src.core.sqlErrors import UNIQUE_VIOLATION, is_error
 from sqlalchemy import select
 from src.core.security import verify_password
-from src.core.jwt import create_access_token, create_refresh_token, decode_refresh_token
+from src.core.jwt import create_access_token, create_refresh_token, decode_jwt_token
 from fastapi.responses import JSONResponse
 from jose import JWTError
 from src.services.users import UserService
@@ -89,7 +89,7 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Missing refresh token")
 
         try:
-            payload = decode_refresh_token(refresh_token)
+            payload = decode_jwt_token(refresh_token)
             user_id = int(payload.get("sub"))
             user_data = await UserService.get_user(db, user_id)
             user = user_data.data

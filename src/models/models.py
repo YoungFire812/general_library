@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from src.db.base import Base
 from sqlalchemy.sql.expression import text
@@ -65,6 +65,9 @@ class CartItem(Base):
     cart = relationship("Cart", back_populates="cart_items")
     book = relationship("Book", back_populates="cart_items")
 
+    __table_args__ = (
+        UniqueConstraint('cart_id', 'book_id', name='uq_cart_book'),
+    )
 
 class Category(Base):
     __tablename__ = "categories"

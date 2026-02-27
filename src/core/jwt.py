@@ -30,7 +30,7 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 
-def decode_refresh_token(token: str) -> dict:
+def decode_jwt_token(token: str) -> dict:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

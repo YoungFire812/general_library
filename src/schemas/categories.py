@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 class CategoryBase(BaseModel):
     id: int
     name: str
+    items_count: int
 
 class CategoryRead(CategoryBase):
     pass

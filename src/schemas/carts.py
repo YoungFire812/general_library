@@ -5,8 +5,6 @@ class CartBase(BaseModel):
     user_id: int
     items_count: int
 
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
-
 
 class CartCreate(CartBase):
     pass
@@ -15,12 +13,12 @@ class CartCreate(CartBase):
 class CartRead(CartBase):
     id: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class CartItemBase(BaseModel):
     cart_id: int
     book_id: int
-
-    model_config = ConfigDict(from_attributes=True, json_encoders={HttpUrl: str})
 
 
 class CartItemCreate(CartItemBase):
@@ -29,3 +27,5 @@ class CartItemCreate(CartItemBase):
 
 class CartItemRead(CartItemBase):
     id: int
+
+    model_config = ConfigDict(from_attributes=True)

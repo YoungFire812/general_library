@@ -53,9 +53,9 @@ v1_router.include_router(files_router)
 v1_router.include_router(categories_router)
 v1_router.include_router(carts_router)
 v1_router.include_router(users_router)
-v1_router.include_router(auth_router)
 
 app.include_router(v1_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

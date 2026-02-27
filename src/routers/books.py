@@ -6,7 +6,7 @@ from src.db.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.schemas.dto import ApiResponse
 from typing import List
-from src.core.pagination import Pagination
+from src.core.deps import Pagination
 
 books_router = APIRouter(prefix="/books")
 
