@@ -3,7 +3,6 @@ from pydantic import BaseModel, ConfigDict, HttpUrl
 
 class CartBase(BaseModel):
     user_id: int
-    items_count: int
 
 
 class CartCreate(CartBase):

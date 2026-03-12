@@ -2,6 +2,12 @@ from fastapi import Query, HTTPException, Depends
 from src.core.jwt import decode_jwt_token
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
+from sqlalchemy import select
+from src.models.models import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.db.database import get_db
+from src.schemas.users import UserRead
+from src.services.users import UserService
 
 
 class Pagination:
@@ -14,9 +20,10 @@ class Pagination:
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-async def get_current_user_id(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-):
+    db: AsyncSession = Depends(get_db)
+) -> UserRead:
     try:
         payload = decode_jwt_token(token)
         user_id = payload.get("sub")
@@ -30,17 +37,20 @@ async def get_current_user_id(
             status_code=401,
             detail="Could not validate credentials",
         )
+    user_id = int(user_id)
+    user = await UserService.get_user_by_id(db, user_id)
+    return user
 
-    return int(user_id)
+async def dev_get_current_user(user_id: int, db: AsyncSession = Depends(get_db)) -> UserRead:
+    user = await UserService.get_user_by_id(db, user_id)
+    return user
 
+async def verify_admin(user: UserRead = Depends(get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return user
 
-def verify_user_access(user_id_jwt: int = Depends(get_current_user_id)):
-    if not user_id_jwt:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user_id_jwt
-
-
-def dev_verify_user(user_id: int, user_id_jwt: int = Depends(get_current_user_id)) -> int:
-    if user_id != user_id_jwt:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return user_id
+async def dev_verify_admin(user: UserRead = Depends(dev_get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return user

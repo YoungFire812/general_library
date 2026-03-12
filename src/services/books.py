@@ -3,13 +3,14 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from websockets import serve
 from typing import List
-from src.models.models import Book
+from src.models.models import Book, Category
 from src.schemas.books import BookCreate, BookUpdate, BookRead
 from src.schemas.categories import CategoryRead
 from src.schemas.dto import ApiResponse
 from src.utils.responses import ResponseHandler
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from datetime import datetime, timezone
 
 
 class BookService:
@@ -20,6 +21,7 @@ class BookService:
         stmt = (
             select(Book)
             .options(selectinload(Book.category))
+            .where(Book.deleted_at.is_(None))
             .order_by(Book.id)
             .limit(limit)
             .offset((page - 1) * limit)
@@ -46,7 +48,7 @@ class BookService:
 
     @staticmethod
     async def get_book(db: AsyncSession, book_id: int) -> ApiResponse[BookRead]:
-        result = await db.execute(select(Book).options(selectinload(Book.category)).where(Book.id == book_id))
+        result = await db.execute(select(Book).options(selectinload(Book.category)).where(Book.id == book_id, Book.deleted_at.is_(None)))
         book = result.scalar_one_or_none()
 
         if book is None:
@@ -61,7 +63,18 @@ class BookService:
 
     @staticmethod
     async def create_book(db: AsyncSession, book: BookCreate) -> ApiResponse[BookRead]:
-        book_dict = book.model_dump(mode="json")
+        book_dict = book.model_dump()
+
+        book_dict["thumbnail"] = str(book_dict["thumbnail"])
+        book_dict["images"] = [str(url) for url in book_dict["images"]]
+
+        result = await db.execute(
+            select(Category).where(Category.id == book_dict["category_id"])
+        )
+
+        if result.scalar_one_or_none() is None:
+            raise HTTPException(404, "Category not found")
+
         db_book = Book(**book_dict)
         db.add(db_book)
         await db.commit()
@@ -78,3 +91,64 @@ class BookService:
             message="Book created!",
             data=BookRead.model_validate(db_book_full)
         )
+
+    @staticmethod
+    async def update_book(db: AsyncSession, user_id: int, book_id: int, data: BookUpdate) :
+        result = await db.execute(
+            select(Book)
+            .where(
+                Book.id == book_id, Book.deleted_at.is_(None)
+            )
+            .options(selectinload(Book.category))
+        )
+        db_book = result.scalar_one_or_none()
+
+        if db_book is None:
+            raise HTTPException(status_code=404, detail="Book not found!")
+        elif db_book.owner_id != user_id:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+
+        data = data.model_dump()
+        if not data:
+            raise HTTPException(400, "No fields to update")
+
+        if data.get("thumbnail") is not None:
+            data["thumbnail"] = str(data["thumbnail"])
+
+        if data.get("images") is not None:
+            data["images"] = [str(url) for url in data["images"]]
+
+        if data.get("category_id") is not None:
+            result = await db.execute(
+                select(Category).where(Category.id == data["category_id"])
+            )
+
+            if result.scalar_one_or_none() is None:
+                raise HTTPException(404, "Category not found")
+
+        for field, value in data.items():
+            if value is not None:
+                setattr(db_book, field, value)
+
+        await db.commit()
+        await db.refresh(db_book)
+        return BookRead.model_validate(db_book)
+
+    @staticmethod
+    async def delete_book(db: AsyncSession, book_id: int, user_id: int):
+        result = await db.execute(
+            select(Book)
+            .where(
+                Book.id == book_id, Book.deleted_at.is_(None)
+            )
+        )
+        db_book = result.scalar_one_or_none()
+
+        if db_book is None:
+            raise HTTPException(status_code=404, detail="Book not found!")
+        elif db_book.owner_id != user_id:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+
+        db_book.deleted_at = datetime.now(timezone.utc)
+        await db.commit()
+        await db.refresh(db_book)

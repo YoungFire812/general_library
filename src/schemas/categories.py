@@ -1,18 +1,21 @@
 from typing import List
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 
 class CategoryBase(BaseModel):
-    id: int
     name: str
-    items_count: int
 
 class CategoryRead(CategoryBase):
-    pass
+    id: int
+    deleted_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
-class CategoryCreate(BaseModel):
-    name: str
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(CategoryBase):
+    pass
 
 

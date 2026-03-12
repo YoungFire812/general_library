@@ -13,6 +13,7 @@ class BookBase(BaseModel):
     images: List[HttpUrl]
     is_published: bool = True
     category_id: int = Field(ge=1)
+    owner_id: int
 
 
 class BookCreate(BookBase):
@@ -26,7 +27,9 @@ class BookUpdate(BaseModel):
     thumbnail: Optional[HttpUrl]
     images: Optional[List[HttpUrl]]
     is_published: Optional[bool]
-    category_id: Optional[int]
+    category_id: Optional[int] = Field(ge=1)
+
+    model_config = ConfigDict(exclude_unset=True)
 
 class BookRead(BaseModel):
     id: int
@@ -38,6 +41,8 @@ class BookRead(BaseModel):
     images: List[HttpUrl]
     is_published: bool = True
     created_at: datetime
+    deleted_at: datetime | None = None
     category: CategoryRead
+    owner_id: int
 
     model_config = ConfigDict(from_attributes=True)
