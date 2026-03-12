@@ -25,7 +25,7 @@ class AuthService:
         user_dict["password"] = hashed_password
 
         db_user = User(**user_dict)
-        db_user.carts = Cart(items_count=0)
+        db_user.carts = Cart()
         db.add(db_user)
 
         try:
@@ -55,7 +55,11 @@ class AuthService:
         )
         db_user = result.scalar_one_or_none()
 
-        if not db_user or not verify_password(data.password, db_user.password):
+        if (
+            not db_user
+            or not verify_password(data.password, db_user.password)
+            or db_user.deleted_at is not None
+        ):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         access_token = create_access_token({"sub": str(db_user.id)})
@@ -91,7 +95,7 @@ class AuthService:
         try:
             payload = decode_jwt_token(refresh_token)
             user_id = int(payload.get("sub"))
-            user_data = await UserService.get_user(db, user_id)
+            user_data = await UserService.get_user_by_id(db, user_id)
             user = user_data.data
         except JWTError:
             raise HTTPException(status_code=401, detail="Invalid refresh token")

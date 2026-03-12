@@ -17,12 +17,9 @@ class User(Base):
     password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
     is_active = Column(Boolean, server_default="True", nullable=False)
-    created_at = Column(
-        TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
-    )
-    role = Column(
-        Enum("admin", "user", name="user_roles"), nullable=False, server_default="user"
-    )
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False)
+    role = Column(Enum("admin", "user", name="user_roles"), nullable=False, server_default="user")
+    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
 
     carts = relationship("Cart", back_populates="user", uselist=False)
 
@@ -43,7 +40,6 @@ class Cart(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
     )
-    items_count = Column(Integer, nullable=False)
 
     user = relationship("User", back_populates="carts")
     cart_items = relationship("CartItem", back_populates="cart")
@@ -76,7 +72,7 @@ class Category(Base):
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
     name = Column(String, unique=True, nullable=False)
-    items_count = Column(Integer, nullable=False, server_default="0", default=0)
+    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
 
     books = relationship("Book", back_populates="category")
 
@@ -93,11 +89,11 @@ class Book(Base):
     stock = Column(Boolean, server_default="True", nullable=False)
     thumbnail = Column(String, nullable=False)
     images = Column(JSONB, default=[], nullable=False)
-    is_published = Column(Boolean, server_default="True", nullable=False)
-    created_at = Column(
-        TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
-    )
+    is_published = Column(Boolean, server_default="False", nullable=False)
+    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     category = relationship("Category", back_populates="books")
     cart_items = relationship("CartItem", back_populates="book")
