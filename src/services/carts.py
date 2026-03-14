@@ -39,7 +39,7 @@ class CartService:
 
     @staticmethod
     async def get_limited_user_product(
-        db: AsyncSession, user_id: int, page: int, limit: int
+        db: AsyncSession, user_id: int, limit: int, offset: int
     ) -> ApiResponse[List[BookRead]]:
         result_user_id = await db.execute(select(Cart.id).where(Cart.user_id == user_id))
         cart_id = result_user_id.scalar_one()
@@ -53,7 +53,6 @@ class CartService:
                 data=[]
             )
 
-        offset = (page - 1) * limit
         result_books = await db.execute(
             select(Book)
             .options(selectinload(Book.category))

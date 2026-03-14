@@ -86,7 +86,7 @@ class Book(Base):
     title = Column(String, nullable=False)
     author = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    stock = Column(Boolean, server_default="True", nullable=False)
+    status = Column(Enum("available", "reserved", "in_exchange", "exchanged", "deleted", name="book_status"), server_default="True", nullable=False)
     thumbnail = Column(String, nullable=False)
     images = Column(JSONB, default=[], nullable=False)
     is_published = Column(Boolean, server_default="False", nullable=False)
@@ -97,3 +97,38 @@ class Book(Base):
 
     category = relationship("Category", back_populates="books")
     cart_items = relationship("CartItem", back_populates="book")
+
+
+class ExchangeOffer(Base):
+    __tablename__ = "exchange_offers"
+
+    id = Column(Integer, primary_key=True)
+
+    from_user_id = Column(ForeignKey("users.id"), nullable=False, index=True)
+    to_user_id = Column(ForeignKey("users.id"), nullable=False, index=True)
+
+    offered_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
+    requested_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
+
+    status = Column(Enum("pending", "accepted", "declined", "expired", name="offer_status"), nullable=False, server_default="pending", index=True)
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False)
+    expires_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW() + interval '7 days'"), nullable=False, index=True)
+
+    responded_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+
+    from_user = relationship("User", foreign_keys=[from_user_id])
+    to_user = relationship("User", foreign_keys=[to_user_id])
+
+    offered_book = relationship("Book", foreign_keys=[offered_book_id])
+    requested_book = relationship("Book", foreign_keys=[requested_book_id])
+
+    __table_args__ = (
+        UniqueConstraint(
+            "from_user_id",
+            "to_user_id",
+            "offered_book_id",
+            "requested_book_id",
+            name="unique_exchange_offer"
+        )
+    )

@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 
 class UserService:
     @staticmethod
-    async def get_user_by_id(db: AsyncSession, user_id: int) -> UserRead:
+    async def get_user_bzy_id(db: AsyncSession, user_id: int) -> UserRead:
         result = await db.execute(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
 
         db_user = result.scalar_one_or_none()

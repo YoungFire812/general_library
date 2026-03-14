@@ -18,7 +18,7 @@ async def get_limited_user_product(
         db: AsyncSession = Depends(get_db),
         pagination: Pagination = Depends()):
     return await CartService.get_limited_user_product(
-        db, user.id, pagination.page, pagination.limit
+        db, user.id, pagination.limit, pagination.offset
     )
 
 @carts_router.post("/cart/products", response_model=ApiResponse[CartItemRead], status_code=201)

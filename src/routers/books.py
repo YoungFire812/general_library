@@ -13,14 +13,14 @@ from src.schemas.users import UserRead
 books_router = APIRouter(prefix="/books", tags=["Books"])
 
 
-@books_router.get("/get_limited", response_model=ApiResponse[List[BookRead]])
+@books_router.get("/get_limited", response_model=List[BookRead])
 async def get_books_limited(
     db: AsyncSession = Depends(get_db),
     pagination: Pagination = Depends(),
     search: str | None = None,
     category_id: int | None = Query(default=None, ge=1)
-) -> ApiResponse[List[BookRead]]:
-    return await BookService.get_books_limited(db, pagination.page, pagination.limit, search, category_id)
+) -> List[BookRead]:
+    return await BookService.get_books_limited(db, pagination.limit, pagination.offset, search, category_id)
 
 
 @books_router.get("/{book_id}", response_model=ApiResponse[BookRead])

@@ -9,6 +9,7 @@ from src.routers.books import books_router
 from src.routers.categories import categories_router
 from src.routers.carts import carts_router
 from src.routers.users import users_router
+from src.routers.exchangeoffers import exchange_offers_router
 from src.routers.auth import auth_router
 from src.minio.minio_client import init_minio_bucket, make_bucket_public
 from src.db.database import init_db
@@ -53,6 +54,7 @@ v1_router.include_router(files_router)
 v1_router.include_router(categories_router)
 v1_router.include_router(carts_router)
 v1_router.include_router(users_router)
+v1_router.include_router(exchange_offers_router)
 
 app.include_router(v1_router)
 app.include_router(auth_router)
