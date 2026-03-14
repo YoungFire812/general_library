@@ -12,10 +12,10 @@ from src.services.users import UserService
 
 class Pagination:
     def __init__(
-        self, page: int = Query(1, ge=1), limit: int = Query(24, ge=1, le=100)
+        self, limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)
     ):
-        self.page = page
         self.limit = limit
+        self.offset = offset
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
