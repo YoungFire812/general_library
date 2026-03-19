@@ -2,7 +2,6 @@ from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.schemas.users import UserRead
 from src.schemas.auth import UserLogin, UserCreate, AuthResponse
-from src.schemas.dto import ApiResponse
 from src.models.models import User, Cart
 from src.core.security import hash_password
 from sqlalchemy.exc import IntegrityError
@@ -17,10 +16,8 @@ from src.services.users import UserService
 
 class AuthService:
     @staticmethod
-    async def user_registration(
-        db: AsyncSession, data: UserCreate
-    ) -> ApiResponse[UserRead]:
-        hashed_password = hash_password(data.password)
+    async def user_registration(db: AsyncSession, data: UserCreate) -> UserRead:
+        hashed_password = await hash_password(data.password)
         user_dict = data.model_dump(exclude={"password"})
         user_dict["password"] = hashed_password
 
@@ -32,14 +29,11 @@ class AuthService:
             await db.commit()
             await db.refresh(db_user)
 
-            return ApiResponse(
-                message="User created!",
-                data=UserRead.model_validate(db_user),
-            )
+            return UserRead.model_validate(db_user)
 
         except IntegrityError as e:
             await db.rollback()
-            if is_error(e, UNIQUE_VIOLATION):
+            if await is_error(e, UNIQUE_VIOLATION):
                 raise HTTPException(
                     status_code=409, detail="User with this data is already registered"
                 )
@@ -57,13 +51,13 @@ class AuthService:
 
         if (
             not db_user
-            or not verify_password(data.password, db_user.password)
+            or not await verify_password(data.password, db_user.password)
             or db_user.deleted_at is not None
         ):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        access_token = create_access_token({"sub": str(db_user.id)})
-        refresh_token = create_refresh_token({"sub": str(db_user.id)})
+        access_token = await create_access_token({"sub": str(db_user.id)})
+        refresh_token = await create_refresh_token({"sub": str(db_user.id)})
 
         auth_response = AuthResponse(
             access_token=access_token,
@@ -71,9 +65,7 @@ class AuthService:
         )
 
         response = JSONResponse(
-            content=ApiResponse(
-                message="Login success!", data=auth_response
-            ).model_dump()
+            content={"message": "Login success!", "data": auth_response}
         )
 
         response.set_cookie(
@@ -93,15 +85,15 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Missing refresh token")
 
         try:
-            payload = decode_jwt_token(refresh_token)
+            payload = await decode_jwt_token(refresh_token)
             user_id = int(payload.get("sub"))
             user_data = await UserService.get_user_by_id(db, user_id)
             user = user_data.data
         except JWTError:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-        new_access = create_access_token({"sub": user_id})
-        new_refresh = create_refresh_token({"sub": user_id})
+        new_access = await create_access_token({"sub": user_id})
+        new_refresh = await create_refresh_token({"sub": user_id})
 
         auth_response = AuthResponse(
             access_token=new_access,
@@ -109,9 +101,7 @@ class AuthService:
         )
 
         response = JSONResponse(
-            content=ApiResponse(
-                message="Token refreshed", data=auth_response
-            ).model_dump()
+            content={"message": "Token refreshed", "data": auth_response}
         )
         response.set_cookie(
             key="refresh_token",

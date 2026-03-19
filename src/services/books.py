@@ -1,13 +1,8 @@
-import traceback
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from websockets import serve
 from typing import List
 from src.models.models import Book, Category
 from src.schemas.books import BookCreate, BookUpdate, BookRead
-from src.schemas.categories import CategoryRead
-from src.schemas.dto import ApiResponse
-from src.utils.responses import ResponseHandler
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
@@ -16,7 +11,11 @@ from datetime import datetime, timezone
 class BookService:
     @staticmethod
     async def get_books_limited(
-        db: AsyncSession, limit: int, offset: int, search: str | None = None, category_id: int | None = None
+        db: AsyncSession,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        category_id: int | None = None,
     ) -> List[BookRead]:
         stmt = (
             select(Book)
@@ -36,16 +35,17 @@ class BookService:
         result = await db.execute(stmt)
         books = result.scalars().all()
 
-        data = [
-            BookRead.model_validate(book)
-            for book in books
-        ]
+        data = [BookRead.model_validate(book) for book in books]
 
         return data
 
     @staticmethod
-    async def get_book(db: AsyncSession, book_id: int) -> ApiResponse[BookRead]:
-        result = await db.execute(select(Book).options(selectinload(Book.category)).where(Book.id == book_id, Book.deleted_at.is_(None)))
+    async def get_book(db: AsyncSession, book_id: int) -> BookRead:
+        result = await db.execute(
+            select(Book)
+            .options(selectinload(Book.category))
+            .where(Book.id == book_id, Book.deleted_at.is_(None))
+        )
         book = result.scalar_one_or_none()
 
         if book is None:
@@ -53,13 +53,10 @@ class BookService:
                 status_code=404, detail=f"Book with id {book_id} not found!"
             )
 
-        return ApiResponse(
-            message=f"Data for book with id {book_id}",
-            data=BookRead.model_validate(book)
-        )
+        return BookRead.model_validate(book)
 
     @staticmethod
-    async def create_book(db: AsyncSession, book: BookCreate) -> ApiResponse[BookRead]:
+    async def create_book(db: AsyncSession, book: BookCreate) -> BookRead:
         book_dict = book.model_dump()
 
         book_dict["thumbnail"] = str(book_dict["thumbnail"])
@@ -84,19 +81,16 @@ class BookService:
         )
         db_book_full = result.scalar_one()
 
-        return ApiResponse(
-            message="Book created!",
-            data=BookRead.model_validate(db_book_full)
-        )
+        return BookRead.model_validate(db_book_full)
 
     @staticmethod
-    async def update_book(db: AsyncSession, user_id: int, book_id: int, data: BookUpdate):
+    async def update_book(
+        db: AsyncSession, user_id: int, book_id: int, data: BookUpdate
+    ):
         async with db.begin():
             result = await db.execute(
                 select(Book)
-                .where(
-                    Book.id == book_id, Book.deleted_at.is_(None)
-                )
+                .where(Book.id == book_id, Book.deleted_at.is_(None))
                 .options(selectinload(Book.category))
                 .with_for_update()
             )
@@ -138,9 +132,7 @@ class BookService:
         async with db.begin():
             result = await db.execute(
                 select(Book)
-                .where(
-                    Book.id == book_id, Book.deleted_at.is_(None)
-                )
+                .where(Book.id == book_id, Book.deleted_at.is_(None))
                 .with_for_update()
             )
             db_book = result.scalar_one_or_none()
