@@ -19,6 +19,7 @@ class BookBase(BaseModel):
 class BookCreate(BookBase):
     pass
 
+
 class BookUpdate(BaseModel):
     title: Optional[str]
     author: Optional[str]
@@ -30,6 +31,7 @@ class BookUpdate(BaseModel):
     category_id: Optional[int] = Field(ge=1)
 
     model_config = ConfigDict(exclude_unset=True)
+
 
 class BookRead(BaseModel):
     id: int

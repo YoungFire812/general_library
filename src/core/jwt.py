@@ -4,7 +4,7 @@ from src.core.config import settings
 from jose import JWTError
 
 
-def create_access_token(data: dict) -> str:
+async def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -17,7 +17,7 @@ def create_access_token(data: dict) -> str:
     return encoded_jwt
 
 
-def create_refresh_token(data: dict) -> str:
+async def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
@@ -30,7 +30,7 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 
-def decode_jwt_token(token: str) -> dict:
+async def decode_jwt_token(token: str) -> dict:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

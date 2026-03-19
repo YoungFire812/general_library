@@ -17,6 +17,7 @@ class ExchangeOfferCreate(BaseModel):
     offered_book_id: int
     requested_book_id: int
 
+
 class ExchangeOfferRead(BaseModel):
     id: int
     from_user_id: int
@@ -30,8 +31,8 @@ class ExchangeOfferRead(BaseModel):
     expires_at: datetime
     responded_at: datetime | None
 
-
     model_config = ConfigDict(from_attributes=True)
+
 
 class ExchangeOfferUpdate(BaseModel):
     status: ExchangeOfferRole

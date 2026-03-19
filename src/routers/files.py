@@ -1,6 +1,5 @@
 from fastapi import APIRouter, UploadFile, File
 from src.minio.minio_client import upload_file_to_minio
-from src.utils.responses import ResponseHandler
 
 from typing import List
 
@@ -13,6 +12,5 @@ async def upload_files(files: List[UploadFile] = File(...)):
     for file in files:
         link = await upload_file_to_minio(file)
         uploaded_links.append(link)
-    return await ResponseHandler.success(
-        "Success file upload", {"files": uploaded_links}
-    )
+
+    return {"message": "Success file upload", "files": uploaded_links}
