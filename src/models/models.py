@@ -1,5 +1,4 @@
 from sqlalchemy import (
-    Column,
     Integer,
     String,
     Boolean,
@@ -11,70 +10,71 @@ from sqlalchemy import (
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from src.db.base import Base
 from sqlalchemy.sql.expression import text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
-    username = Column(String, unique=True, nullable=False, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
-    password = Column(String, nullable=False)
-    full_name = Column(String, nullable=False)
-    is_active = Column(Boolean, server_default="True", nullable=False)
-    created_at = Column(
+    username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    password: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str] = mapped_column(String, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
     )
-    role = Column(
+    role: Mapped[str] = mapped_column(
         Enum("admin", "user", "deliveryman", name="user_roles"),
         nullable=False,
-        server_default="user",
+        server_default=text("'user'"),
     )
-    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
-    carts = relationship("Cart", back_populates="user", uselist=False)
+    carts: Mapped["Cart"] = relationship("Cart", back_populates="user", uselist=False)
 
 
 class Cart(Base):
     __tablename__ = "carts"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
         index=True,
     )
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
     )
 
-    user = relationship("User", back_populates="carts")
-    cart_items = relationship("CartItem", back_populates="cart")
+    user: Mapped["User"] = relationship("User", back_populates="carts")
+    cart_items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="cart")
 
 
 class CartItem(Base):
     __tablename__ = "cart_items"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
-    cart_id = Column(
+    cart_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("carts.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    book_id = Column(
+    book_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=False
     )
 
-    cart = relationship("Cart", back_populates="cart_items")
-    book = relationship("Book", back_populates="cart_items")
+    cart: Mapped["Cart"] = relationship("Cart", back_populates="cart_items")
+    book: Mapped["Book"] = relationship("Book", back_populates="cart_items")
 
     __table_args__ = (UniqueConstraint("cart_id", "book_id", name="uq_cart_book"),)
 
@@ -82,25 +82,25 @@ class CartItem(Base):
 class Category(Base):
     __tablename__ = "categories"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
-    name = Column(String, unique=True, nullable=False)
-    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
-    books = relationship("Book", back_populates="category")
+    books: Mapped[list["Book"]] = relationship("Book", back_populates="category")
 
 
 class Book(Base):
     __tablename__ = "books"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         Integer, primary_key=True, nullable=False, unique=True, autoincrement=True
     )
-    title = Column(String, nullable=False)
-    author = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    status = Column(
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    author: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(
         Enum(
             "available",
             "reserved",
@@ -109,57 +109,57 @@ class Book(Base):
             "deleted",
             name="book_status",
         ),
-        server_default="True",
+        server_default=text("'available'"),
         nullable=False,
     )
-    thumbnail = Column(String, nullable=False)
-    images = Column(JSONB, default=[], nullable=False)
-    is_published = Column(Boolean, server_default="False", nullable=False)
-    deleted_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
-    created_at = Column(
+    thumbnail: Mapped[str] = mapped_column(String, nullable=False)
+    images: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
+    is_published: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
     )
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
-    category = relationship("Category", back_populates="books")
-    cart_items = relationship("CartItem", back_populates="book")
+    category: Mapped["Category"] = relationship("Category", back_populates="books")
+    cart_items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="book")
 
 
 class ExchangeOffer(Base):
     __tablename__ = "exchange_offers"
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    from_user_id = Column(ForeignKey("users.id"), nullable=False, index=True)
-    to_user_id = Column(ForeignKey("users.id"), nullable=False, index=True)
+    from_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    to_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
-    offered_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
-    requested_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
+    offered_book_id: Mapped[int] = mapped_column(Integer, ForeignKey("books.id"), nullable=False, index=True)
+    requested_book_id: Mapped[int] = mapped_column(Integer, ForeignKey("books.id"), nullable=False, index=True)
 
-    status = Column(
+    status: Mapped[str] = mapped_column(
         Enum("pending", "accepted", "declined", "expired", name="offer_status"),
         nullable=False,
-        server_default="pending",
+        server_default=text("'pending'"),
         index=True,
     )
 
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False
     )
-    expires_at = Column(
+    expires_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         server_default=text("NOW() + interval '7 days'"),
         nullable=False,
         index=True,
     )
 
-    responded_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+    responded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
-    from_user = relationship("User", foreign_keys=[from_user_id])
-    to_user = relationship("User", foreign_keys=[to_user_id])
-    offered_book = relationship("Book", foreign_keys=[offered_book_id])
-    requested_book = relationship("Book", foreign_keys=[requested_book_id])
+    from_user: Mapped["User"] = relationship("User", foreign_keys=[from_user_id])
+    to_user: Mapped["User"] = relationship("User", foreign_keys=[to_user_id])
+    offered_book: Mapped["Book"] = relationship("Book", foreign_keys=[offered_book_id])
+    requested_book: Mapped["Book"] = relationship("Book", foreign_keys=[requested_book_id])
 
     __table_args__ = UniqueConstraint(
         "from_user_id",
@@ -173,9 +173,9 @@ class ExchangeOffer(Base):
 class ActiveOrder(Base):
     __tablename__ = "active_orders"
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    status = Column(
+    status: Mapped[str] = mapped_column(
         Enum(
             "waiting_drop",
             "delivery",
@@ -185,40 +185,41 @@ class ActiveOrder(Base):
             "cancelled",
             name="order_status",
         ),
+        server_default=text("'waiting_drop'"),
         nullable=False,
         index=True,
     )
 
-    user1_id = Column(ForeignKey("users.id"), nullable=False, index=True)
-    user2_id = Column(ForeignKey("users.id"), nullable=False, index=True)
+    user1_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user2_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
-    user1_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
-    user2_book_id = Column(ForeignKey("books.id"), nullable=False, index=True)
+    user1_book_id: Mapped[int] = mapped_column(Integer, ForeignKey("books.id"), nullable=False, index=True)
+    user2_book_id: Mapped[int] = mapped_column(Integer, ForeignKey("books.id"), nullable=False, index=True)
 
-    user1_locker_id = Column(ForeignKey("lockers.id"), nullable=True, index=True)
-    user2_locker_id = Column(ForeignKey("lockers.id"), nullable=True, index=True)
+    user1_locker_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("lockers.id"), nullable=True, index=True)
+    user2_locker_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("lockers.id"), nullable=True, index=True)
 
     """
     user_status - Обозначение выполнил ли человек свою роль на текущей стадии, положил или забрал ли книгу, 
     при отмене удобно смотреть, если человек не забрал свою книгу а время вышло, в этом время статус поменялся на completed или cancelled. 
     В завершенном ордере, False будет означать что книга в контейнере и нужно ее забирать курьером в склад
     """
-    user1_status = Column(Boolean, server_default="False", nullable=False)
-    user2_status = Column(Boolean, server_default="False", nullable=False)
+    user1_status: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False)
+    user2_status: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False)
 
-    time_deadline = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
-    cancel_reason = Column(
+    time_deadline: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("NOW() + interval '7 days'"), nullable=False)
+    cancel_reason: Mapped[str | None] = mapped_column(
         Enum("delivery_cancel", "user_cancel", "time_cancel", name="cancel_status"),
         nullable=True,
         index=True,
     )
 
-    finished_at = Column(TIMESTAMP(timezone=True), server_default=None, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
-    user1_book = relationship("Book", foreign_keys=[user1_book_id])
-    user2_book = relationship("Book", foreign_keys=[user2_book_id])
-    user1_locker = relationship("Locker", foreign_keys=[user1_locker_id])
-    user2_locker = relationship("Locker", foreign_keys=[user2_locker_id])
+    user1_book: Mapped["Book"] = relationship("Book", foreign_keys=[user1_book_id])
+    user2_book: Mapped["Book"] = relationship("Book", foreign_keys=[user2_book_id])
+    user1_locker: Mapped["Locker"] = relationship("Locker", foreign_keys=[user1_locker_id])
+    user2_locker: Mapped["Locker"] = relationship("Locker", foreign_keys=[user2_locker_id])
 
     __table_args__ = UniqueConstraint(
         "user1_id",
@@ -232,14 +233,14 @@ class ActiveOrder(Base):
 class Locker(Base):
     __tablename__ = "lockers"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
-    available_slots = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    address: Mapped[str] = mapped_column(String, nullable=False)
+    available_slots: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    lat = Column(Float, nullable=False)
-    lng = Column(Float, nullable=False)
+    lat: Mapped[float] = mapped_column(Float, nullable=False)
+    lng: Mapped[float] = mapped_column(Float, nullable=False)
 
-    is_active = Column(Boolean, server_default="True", nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), nullable=False)
 
     __table_args__ = UniqueConstraint("lat", "lng", name="coordinates")

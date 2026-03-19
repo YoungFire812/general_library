@@ -5,12 +5,12 @@ from typing import Literal
 
 
 class OrderStatus(Enum):
-    waiting_drop = ("waiting_drop",)
-    delivery = ("delivery",)
-    waiting_pickup = ("waiting_pickup",)
-    waiting_cancelled = ("waiting_cancelled",)
-    completed = ("completed",)
-    cancelled = ("cancelled",)
+    waiting_drop = "waiting_drop"
+    delivery = "delivery"
+    waiting_pickup = "waiting_pickup"
+    waiting_cancelled = "waiting_cancelled"
+    completed = "completed"
+    cancelled = "cancelled"
 
 
 class CancelReason(str, Enum):
@@ -23,8 +23,6 @@ class CancelOrderRequest(BaseModel):
 
 
 class ActiveOrderCreate(BaseModel):
-    status: Literal["waiting_drop"] = "waiting_drop"
-
     user1_id: int
     user2_id: int
 
@@ -36,11 +34,6 @@ class ActiveOrderCreate(BaseModel):
 
     user1_locker_id: Literal[None] = None
     user2_locker_id: Literal[None] = None
-
-    time_deadline: datetime | None = None
-
-    def model_post_init(self, __context=None):
-        self.time_deadline = datetime.now(timezone.utc) + timedelta(days=7)
 
 
 class ActiveOrderRead(BaseModel):
