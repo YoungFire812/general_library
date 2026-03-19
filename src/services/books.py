@@ -20,7 +20,7 @@ class BookService:
         stmt = (
             select(Book)
             .options(selectinload(Book.category))
-            .where(Book.deleted_at.is_(None))
+            .where(Book.deleted_at.is_(None), Book.is_published.is_(True))
             .order_by(Book.id)
             .limit(limit)
             .offset(offset)
