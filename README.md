@@ -1,213 +1,198 @@
-# Table of Contents
-
-* [What is General Library?](#what-is-general-library)
-* [Origin](#origin)
-* [Features](#features)
-
-  * [Authentication](#authentication)
-  * [Books & Categories](#books--categories)
-  * [Exchange System](#exchange-system)
-  * [Cart](#cart)
-  * [File Storage](#file-storage)
-  * [Other](#other)
-  * [Upcoming features](#upcoming-features)
-* [How to use](#how-to-use)
-* [Tech Stack](#tech-stack)
-* [Installation for developers](#installation-for-developers)
-* [Project plan](#project-plan)
-
-<br />
-
----
-
 # General Library
 
-Backend service for a book exchange platform.
+Backend-сервис для платформы обмена книгами.
 
-(Вставить фото: схема или Swagger)
-
----
-
-## What is General Library?
-
-General Library is a backend system designed to support a **peer-to-peer book exchange platform**.
-
-Unlike typical CRUD-based projects, it already includes core mechanics required for real interaction between users:
-
-* authentication
-* exchange offers
-* active orders
-* carts
-* file storage
-
-The goal is to simulate a real-world service where users can exchange books, not just store them.
+(Вставить фото: Swagger или схема проекта)
 
 ---
 
-## Origin
+## Что такое General Library?
 
-The project started as a simple idea:
-most books are read once and then stay unused.
+**General Library** — это backend-приложение для построения сервиса, в котором пользователи могут обмениваться книгами между собой.
 
-At the same time, someone else might be looking for exactly that book.
+Проект не ограничивается простым хранением данных. В его основе лежит логика взаимодействия между пользователями: от добавления книг до формирования и завершения обмена.
 
-This system is an attempt to build a backend that allows books to circulate between users, forming a simple exchange network.
-
----
-
-## Features
-
-### Authentication
-
-* [x] JWT-based authentication
-* [x] Protected routes via dependencies
-* [x] User management
-
-(Вставить фото: пример запроса логина / токена)
+Основная цель — создать систему, в которой книги не простаивают, а продолжают использоваться другими людьми.
 
 ---
 
-### Books & Categories
+## Идея проекта
 
-* [x] Create and manage books
-* [x] Assign categories
-* [x] Structured schemas and models
+У многих людей есть книги, которые уже прочитаны и больше не используются.
 
-(Вставить фото: создание книги / список)
+В то же время другим пользователям эти книги могут быть действительно нужны.
 
----
-
-### Exchange System
-
-* [x] Exchange offers between users
-* [x] Active orders (accepted exchanges)
-* [x] Separate logic layer for exchange handling
-
-This is the core of the system — interaction between users is built around these modules.
-
-(Вставить фото: схема обмена)
+**General Library** решает эту проблему через механизм обмена. Пользователи могут предлагать свои книги и получать другие взамен, формируя живую экосистему взаимодействия.
 
 ---
 
-### Cart
+## Ключевые особенности
 
-* [x] Add/remove books
-* [x] Intermediate step before exchange
+Проект сфокусирован на взаимодействии пользователей, а не только на CRUD-операциях.
 
----
+Реализованы:
 
-### File Storage
+- система предложений обмена  
+- управление активными сделками  
+- контроль и отслеживание статуса каждого обмена 
+- гибкое формирование предложений перед отправкой 
+- безопасная аутентификация и изоляция пользовательских данных
 
-* [x] File upload support
-* [x] Integration with MinIO
-* [x] Separate client layer
-
----
-
-### Other
-
-* [x] Rate limiting (`core/limiter.py`)
-* [x] Error handling layer (`sqlErrors.py`)
-* [x] Dependency system (`deps.py`)
-* [x] Background tasks (`tasks/`)
+Такой подход позволяет рассматривать проект как полноценную модель реального сервиса с пользовательским взаимодействием.
 
 ---
 
-### Upcoming features
+## Функциональность
 
-* [ ] Improve exchange flow (statuses, lifecycle)
-* [ ] Logging system
-* [ ] Permissions / roles
-* [ ] Notifications
-* [ ] Better search & filtering
+### Аутентификация
 
----
+- JWT-аутентификация  
+- Защита маршрутов через зависимости  
+- Управление пользователями  
 
-## How to use
-
-After starting the project:
-
-```
-http://localhost:8000/docs
-```
-
-All endpoints are available via Swagger UI.
-
-(Вставить фото: Swagger)
+Система построена с возможностью дальнейшего расширения (роли, права доступа).
 
 ---
 
-## Tech Stack
+### Книги и категории
 
-Backend
+- Создание и управление книгами  
+- Связь книг с категориями 
+- Участие в обмене только доступных книг  
+- Поиск книг по категориям и ключевым словам 
 
-* FastAPI
-* SQLAlchemy
-
-Database
-
-* PostgreSQL
-
-Infrastructure
-
-* Docker / Docker Compose
-* MinIO
-
-Security
-
-* JWT
+Формируется структурированная база для работы с каталогом.
 
 ---
 
-## Installation for developers
+### Система обмена
 
-1. Clone the repository
+- Гибкая система обмена книгами с выбором доступных экземпляров  
+- Формирование и согласование предложений обмена между пользователями  
+- Активные сделки с отслеживанием статусов и безопасной сделкой
 
+Это центральная часть проекта. Именно здесь реализуется логика взаимодействия между пользователями.
+
+---
+
+### Корзина
+
+- Добавление и удаление книг  
+- Используется для хранения книг, как промежуточный этап перед обменом
+
+Позволяет гибко формировать предложения.
+
+---
+
+### Файлы (MinIO)
+
+- Загрузка файлов в удобное хранилище
+- Отдельный клиент для работы с хранилищем  
+- Подготовка к использованию внешнего storage  
+
+Решение позволяет легко масштабировать работу с медиа.
+
+---
+
+### Дополнительно
+
+- Ограничение запросов (`core/limiter.py`)  
+- Обработка ошибок базы данных (`sqlErrors.py`)  
+- Dependency Injection (`deps.py`)  
+
+Повышает стабильность и управляемость системы.
+
+---
+
+## Технологии
+
+### Backend
+
+- FastAPI  
+- SQLAlchemy  
+
+FastAPI выбран за высокую производительность, простоту разработки и встроенную поддержку асинхронности.  
+SQLAlchemy обеспечивает гибкую и мощную работу с базой данных.
+
+---
+
+### База данных
+
+- PostgreSQL  
+
+Надежная реляционная база данных с поддержкой сложных запросов и расширяемости.
+
+---
+
+### Инфраструктура
+
+- Docker / Docker Compose  
+- MinIO  
+
+Контейнеризация упрощает запуск и развёртывание проекта.  
+MinIO используется как S3-совместимое хранилище для работы с файлами.
+
+---
+
+### Безопасность
+
+- JWT  
+
+Позволяет реализовать stateless-аутентификацию и масштабировать систему без привязки к сессиям.
+
+---
+
+## Установка и запуск
+
+1. Клонировать репозиторий
 ```
 git clone https://github.com/YoungFire812/general_library.git
 cd general_library
 ```
 
-2. Run the project
+2. Запустить проект
 
 ```
 docker-compose up --build
 ```
 
-3. Open:
-
+3. Открыть документацию
 ```
 http://localhost:8000/docs
 ```
 
 ---
 
-## Project plan
+## План развития
 
-### Stage 1 — Core backend (done)
+### Этап 1 — Базовый функционал (реализовано)
 
-* authentication
-* books / categories
-* carts
-* exchange offers
-* active orders
-
-### Stage 2 — Stabilization
-
-* improve exchange lifecycle
-* add logging
-* improve validation
-
-### Stage 3 — Interaction
-
-* notifications
-* better user interaction
-* permissions
-
-### Stage 4 — Scaling
-
-* caching
-* performance improvements
-* monitoring
+- аутентификация  
+- книги и категории  
+- корзина  
+- предложения обмена  
+- активные сделки  
 
 ---
+
+### Этап 2 — Стабилизация
+
+- доработка логики обмена  
+- улучшение валидации  
+- обработка ошибок  
+
+---
+
+### Этап 3 — Взаимодействие пользователей
+
+- уведомления  
+- расширение логики обмена  
+- роли и права доступа  
+
+---
+
+### Этап 4 — Масштабирование
+
+- кэширование  
+- оптимизация запросов  
+- мониторинг  
