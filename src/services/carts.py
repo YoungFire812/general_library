@@ -23,19 +23,11 @@ class CartService:
 
         db_cart_item = CartItem(**product.model_dump())
         db.add(db_cart_item)
-        try:
-            await db.commit()
-            await db.refresh(db_cart_item)
-            return CartItemRead.model_validate(db_cart_item)
 
-        except IntegrityError as e:
-            await db.rollback()
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(
-                    status_code=409, detail="This book is already in the cart"
-                )
-            else:
-                raise
+        await db.commit()
+        await db.refresh(db_cart_item)
+        return CartItemRead.model_validate(db_cart_item)
+
 
     @staticmethod
     async def get_limited_user_product(

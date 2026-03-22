@@ -7,17 +7,20 @@ from src.schemas.users import UserRead
 from src.schemas.auth import UserLogin, UserCreate
 from src.services.auth import AuthService
 import json
+from src.core.limiter import limiter
 
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @auth_router.post("/registration", response_model=UserRead, status_code=201)
+@limiter.limit("5/minute")
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> UserRead:
     return await AuthService.user_registration(db, user)
 
 
 @auth_router.post("/login")
+@limiter.limit("5/minute")
 async def login_user(
     user: UserLogin, db: AsyncSession = Depends(get_db)
 ) -> JSONResponse:

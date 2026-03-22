@@ -6,6 +6,8 @@ from src.core.config import settings
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from loguru import logger
+from src.core.sqlErrors import UNIQUE_VIOLATION, NOT_NULL_VIOLATION, is_error
+from sqlalchemy.exc import IntegrityError
 
 
 DATABASE_URL = f"postgresql+asyncpg://{settings.DB_USERNAME}:{settings.DB_PASSWORD}@{settings.DB_HOSTNAME}:{settings.DB_PORT}/{settings.DB_NAME}"
@@ -35,6 +37,15 @@ async def get_db() -> AsyncGenerator:
         try:
             yield session
             await session.commit()
+
+        except IntegrityError as e:
+            await session.rollback()
+            if await is_error(e, UNIQUE_VIOLATION):
+                raise HTTPException(status_code=409, detail="object with this data is already exists")
+            elif await is_error(e, NOT_NULL_VIOLATION):
+                raise HTTPException(status_code=409, detail="some data cannot be None")
+            else:
+                raise HTTPException(status_code=500, detail="Internal Database Error")
         except SQLAlchemyError:
             await session.rollback()
             logger.bind(database=True).exception(

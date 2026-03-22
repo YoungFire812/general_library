@@ -51,17 +51,9 @@ class CategoryService:
         db_category = Category(**category_dict)
         db.add(db_category)
 
-        try:
-            await db.commit()
-            await db.refresh(db_category)
-            return CategoryRead.model_validate(db_category)
-
-        except IntegrityError as e:
-            await db.rollback()
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(409, f"Category {category.name} is already exists!")
-            else:
-                raise
+        await db.commit()
+        await db.refresh(db_category)
+        return CategoryRead.model_validate(db_category)
 
     @staticmethod
     async def update_category(db: AsyncSession, category_id: int, data: CategoryUpdate):
@@ -83,17 +75,9 @@ class CategoryService:
             if value is not None:
                 setattr(db_category, field, value)
 
-        try:
-            await db.commit()
-            await db.refresh(db_category)
-            return CategoryRead.model_validate(db_category)
-
-        except IntegrityError as e:
-            await db.rollback()
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(409, "Category with this name is already exists!")
-            else:
-                raise
+        await db.commit()
+        await db.refresh(db_category)
+        return CategoryRead.model_validate(db_category)
 
     @staticmethod
     async def delete_category(db: AsyncSession, category_id: int):

@@ -17,9 +17,7 @@ async def get_all_categories(db: AsyncSession = Depends(get_db)) -> List[Categor
     return await CategoryService.get_all_categories(db)
 
 
-@categories_router.get(
-    "/{category_id}", tags=["Categories"], response_model=CategoryRead
-)
+@categories_router.get("/{category_id}", tags=["Categories"], response_model=CategoryRead)
 async def get_one_category(
     category_id: int, db: AsyncSession = Depends(get_db)
 ) -> CategoryRead:
@@ -28,7 +26,9 @@ async def get_one_category(
 
 @categories_router.post("/create", tags=["Categories"], response_model=CategoryRead)
 async def create_category(
-    category: CategoryCreate, db: AsyncSession = Depends(get_db)
+    category: CategoryCreate,
+    db: AsyncSession = Depends(get_db),
+    _admin: UserRead = Depends(dev_verify_admin),
 ) -> CategoryRead:
     return await CategoryService.create_category(db, category)
 

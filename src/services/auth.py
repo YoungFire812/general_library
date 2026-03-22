@@ -25,20 +25,11 @@ class AuthService:
         db_user.carts = Cart()
         db.add(db_user)
 
-        try:
-            await db.commit()
-            await db.refresh(db_user)
+        await db.commit()
+        await db.refresh(db_user)
 
-            return UserRead.model_validate(db_user)
+        return UserRead.model_validate(db_user)
 
-        except IntegrityError as e:
-            await db.rollback()
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(
-                    status_code=409, detail="User with this data is already registered"
-                )
-            else:
-                raise
 
     @staticmethod
     async def user_login(db: AsyncSession, data: UserLogin) -> JSONResponse:

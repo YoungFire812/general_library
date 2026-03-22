@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from src.core.deps import Pagination, dev_get_current_user
 from src.schemas.users import UserRead
+from src.core.limiter import limiter
 
 
 books_router = APIRouter(prefix="/books", tags=["Books"])
@@ -29,6 +30,7 @@ async def get_one_book(book_id: int, db: AsyncSession = Depends(get_db)) -> Book
 
 
 @books_router.post("", response_model=BookRead, status_code=201)
+@limiter.limit("1/minute")
 async def create_book(book: BookCreate, db: AsyncSession = Depends(get_db)) -> BookRead:
     return await BookService.create_book(db, book)
 
@@ -40,7 +42,7 @@ async def update_book(
     db: AsyncSession = Depends(get_db),
     user: UserRead = Depends(dev_get_current_user),
 ) -> BookRead:
-    return await BookService.update_book(db, user.id, book_id, data)
+    return await BookService.update_book(db, user, book_id, data)
 
 
 @books_router.delete("/{book_id}", status_code=204)
@@ -49,4 +51,4 @@ async def delete_book(
     db: AsyncSession = Depends(get_db),
     user: UserRead = Depends(dev_get_current_user),
 ):
-    await BookService.delete_book(db, book_id, user.id)
+    await BookService.delete_book(db, book_id, user)

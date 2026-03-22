@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
@@ -17,6 +17,11 @@ from src.minio.minio_client import init_minio_bucket, make_bucket_public
 from src.db.database import init_db
 from loguru import logger
 import sys
+
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+
+from src.core.limiter import limiter
 
 
 logger.remove()
@@ -48,6 +53,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
 
 v1_router = APIRouter(prefix="/v1")
 
@@ -70,3 +76,10 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=False,
 )
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests"}
+    )

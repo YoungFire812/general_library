@@ -116,15 +116,8 @@ class ExchangeOfferService:
 
         db.add(db_offer)
 
-        try:
-            await db.commit()
-            await db.refresh(db_offer)
-        except IntegrityError as e:
-            await db.rollback()
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(409, "offer with this data is already exists")
-            else:
-                raise
+        await db.commit()
+        await db.refresh(db_offer)
 
         return ExchangeOfferRead.model_validate(db_offer)
 
@@ -199,10 +192,5 @@ class ExchangeOfferService:
                 user2_book_id=db_requested_book.id,
             )
 
-            try:
-                return await ActiveOrderService.create_order(db, active_order_data)
-            except IntegrityError as e:
-                if await is_error(e, UNIQUE_VIOLATION):
-                    raise HTTPException(409, "This order already exists")
-                else:
-                    raise
+            return await ActiveOrderService.create_order(db, active_order_data)
+

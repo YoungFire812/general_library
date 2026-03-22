@@ -15,16 +15,9 @@ class LockerService:
 
         db_locker = Locker(**payload)
         db.add(db_locker)
-        try:
-            await db.commit()
-            await db.refresh(db_locker)
-        except IntegrityError as e:
-            if await is_error(e, UNIQUE_VIOLATION):
-                raise HTTPException(
-                    409, "Locker with this coordinates is already exists"
-                )
-            else:
-                raise
+
+        await db.commit()
+        await db.refresh(db_locker)
 
         return LockerRead.model_validate(db_locker)
 

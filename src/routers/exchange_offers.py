@@ -11,6 +11,7 @@ from src.schemas.exchange_offers import (
 )
 from src.schemas.active_orders import ActiveOrderRead
 from src.services.exchange_offers import ExchangeOfferService
+from src.core.limiter import limiter
 
 
 exchange_offers_router = APIRouter(prefix="/offers", tags=["Exchange offers"])
@@ -39,6 +40,7 @@ async def get_one_offer(
 
 
 @exchange_offers_router.post("/", response_model=ExchangeOfferRead, status_code=201)
+@limiter.limit("1/minute")
 async def create_offer(
     offer: ExchangeOfferCreate,
     db: AsyncSession = Depends(get_db),

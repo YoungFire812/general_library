@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from src.models.models import Book, Category
 from src.schemas.books import BookCreate, BookUpdate, BookRead
+from src.schemas.users import UserRead
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
@@ -56,7 +57,10 @@ class BookService:
         return BookRead.model_validate(book)
 
     @staticmethod
-    async def create_book(db: AsyncSession, book: BookCreate) -> BookRead:
+    async def create_book(db: AsyncSession, book: BookCreate, user: UserRead) -> BookRead:
+        if book.owner_id != user.id:
+            raise HTTPException(403, "permission denied")
+
         book_dict = book.model_dump()
 
         book_dict["thumbnail"] = str(book_dict["thumbnail"])
@@ -85,12 +89,12 @@ class BookService:
 
     @staticmethod
     async def update_book(
-        db: AsyncSession, user_id: int, book_id: int, data: BookUpdate
+        db: AsyncSession, user: UserRead, book_id: int, data: BookUpdate
     ):
         async with db.begin():
             result = await db.execute(
                 select(Book)
-                .where(Book.id == book_id, Book.deleted_at.is_(None))
+                .where(Book.id == book_id, Book.deleted_at.is_(None), Book.owner_id == user.id)
                 .options(selectinload(Book.category))
                 .with_for_update()
             )
@@ -98,8 +102,6 @@ class BookService:
 
             if db_book is None:
                 raise HTTPException(status_code=404, detail="Book not found!")
-            elif db_book.owner_id != user_id:
-                raise HTTPException(status_code=403, detail="Not enough permissions")
             elif db_book.status != "available":
                 raise HTTPException(400, "Cannot modify, book in order")
 
@@ -128,19 +130,17 @@ class BookService:
         return BookRead.model_validate(db_book)
 
     @staticmethod
-    async def delete_book(db: AsyncSession, book_id: int, user_id: int):
+    async def delete_book(db: AsyncSession, book_id: int, user: UserRead):
         async with db.begin():
             result = await db.execute(
                 select(Book)
-                .where(Book.id == book_id, Book.deleted_at.is_(None))
+                .where(Book.id == book_id, Book.deleted_at.is_(None), Book.owner_id == user.id)
                 .with_for_update()
             )
             db_book = result.scalar_one_or_none()
 
             if db_book is None:
                 raise HTTPException(status_code=404, detail="Book not found!")
-            elif db_book.owner_id != user_id:
-                raise HTTPException(status_code=403, detail="Not enough permissions")
             elif db_book.status != "available":
                 raise HTTPException(400, "Cannot modify, book in order")
 
