@@ -1,7 +1,13 @@
-from fastapi import FastAPI, APIRouter, Request
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 import asyncio
+import sys
+from contextlib import asynccontextmanager
+from loguru import logger
+from slowapi.errors import RateLimitExceeded
+
+from fastapi import FastAPI, APIRouter, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from src.core.config import settings
 from src.routers.files import files_router
@@ -15,33 +21,14 @@ from src.routers.active_orders import active_orders_router
 from src.routers.auth import auth_router
 from src.minio.minio_client import init_minio_bucket, make_bucket_public
 from src.db.database import init_db
-from loguru import logger
-import sys
-
-from fastapi.responses import JSONResponse
-from slowapi.errors import RateLimitExceeded
-
 from src.core.limiter import limiter
+from src.core.exceptions import http_exception_handler, general_exception_handler
+from src.middleware.request_id import request_id_middleware
+from src.middleware.logging import logging_middleware
+from src.core.logger import setup_logger
 
 
-logger.remove()
-logger.add(
-    sys.stdout,
-    level=settings.LOG_LEVEL,
-    colorize=True,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-)
-
-if settings.MODE == "PROD":
-    logger.add(
-        "logs/app.log",
-        rotation="500 MB",
-        retention="30 days",
-        compression="zip",
-        level="ERROR",
-        serialize=True,
-    )
-
+setup_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,6 +41,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
+
+app.middleware("http")(request_id_middleware)
+app.middleware("http")(logging_middleware)
+
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 v1_router = APIRouter(prefix="/v1")
 

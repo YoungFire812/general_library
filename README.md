@@ -138,7 +138,7 @@ general_library/
 │   │   └── users.py
 │   │
 │   ├── main.py                     # Application entry point
-│   └──constants.py                # Application Enum constants 
+│   └──constants.py                 # Application Enum constants 
 │
 ├── tests/                          # Test suite
 ├── .env                            # Example environment variables
@@ -191,7 +191,7 @@ general_library/
 
 ---
 
-### Cart (Корзина)
+### Cart
 
 * `GET /api/v1/users/{user_id}/cart/products` – Получить товары в корзине пользователя с пагинацией
 * `POST /api/v1/cart/products` – Добавить книгу в корзину

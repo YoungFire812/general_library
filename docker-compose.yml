@@ -57,22 +57,8 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/app/src
+      - ./logs:/app/logs
 
-  frontend:
-    networks:
-      - app_network
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend_app
-    ports:
-      - "8080:8080"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    restart: unless-stopped
 
 networks:
   app_network:

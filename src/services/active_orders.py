@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from src.models.models import ActiveOrder, Book, Locker
 from sqlalchemy import select, func, text, update, or_
 from typing import List
+from loguru import logger
 from enum import Enum
 
 
@@ -16,6 +17,7 @@ class CancelReason(str, Enum):
 class ActiveOrderService:
     @staticmethod
     async def next_status(db_active_order: ActiveOrder):
+        old_status = db_active_order.status
         if db_active_order.status == "waiting_drop":
             db_active_order.status = "delivery"
             db_active_order.user1_status = False
@@ -27,7 +29,10 @@ class ActiveOrderService:
             db_active_order.status = "cancelled"
             db_active_order.finished_at = func.now()
         else:
+            logger.warning("Invalid order status transition", order_id=db_active_order.id, current_status=db_active_order.status)
             raise HTTPException(409, "invalid order status transition")
+
+        logger.info("Order status updated", order_id=db_active_order.id, old_status=old_status, new_status=db_active_order.status)
 
     @staticmethod
     async def release_lockers(db: AsyncSession, locker_id: int):
@@ -37,9 +42,12 @@ class ActiveOrderService:
             .values(available_slots=Locker.available_slots + 1)
         )
 
+        logger.info("Locker released", locker_id=locker_id)
+
     @staticmethod
     async def confirm_delivery(db: AsyncSession, order_id: int, user: UserRead):
         if user.role != "deliveryman":
+            logger.info("invalid user role for delivery", order_id=order_id)
             raise HTTPException(403, "not enough permission")
 
         async with db.begin():
@@ -49,9 +57,11 @@ class ActiveOrderService:
 
             db_active_order = result.scalar_one_or_none()
             if db_active_order is None:
+                logger.info("Order not found for delivery", order_id=order_id)
                 raise HTTPException(404, "order with this id is not found")
 
             if db_active_order.status != "delivery":
+                logger.info("Order not int delivery status", order_id=order_id)
                 raise HTTPException(409, "order is not in delivery status")
 
             db_active_order.status = "waiting_pickup"
@@ -68,6 +78,8 @@ class ActiveOrderService:
                 .where(Book.id == db_active_order.user2_book_id)
                 .values(owner_id=db_active_order.user1_id)
             )
+
+        logger.info("Delivery confirmed", order_id=order_id, deliveryman_id=user.id)
 
     @staticmethod
     async def process_expired_orders(db: AsyncSession, batch_size: int = 50):
@@ -99,6 +111,7 @@ class ActiveOrderService:
                         )
 
                     await ActiveOrderService.next_status(order)
+                    logger.info("Expired order processed", order_id=order.id, new_status=order.status, cancel_reason="pickup_cancel")
 
         while True:
             result = await db.execute(
@@ -116,6 +129,7 @@ class ActiveOrderService:
 
             for order in expired_drop_orders:
                 await ActiveOrderService.time_cancel_active_order(db, order.id)
+                logger.info("Expired order processed", order_id=order.id, new_status=order.status, cancel_reason="drop_cancel")
 
     @staticmethod
     async def confirm_drop_pickup(db: AsyncSession, order_id: int, user: UserRead):
@@ -126,17 +140,16 @@ class ActiveOrderService:
 
             db_active_order = result.scalar_one_or_none()
             if db_active_order is None:
+                logger.warning("Drop/pickup confirm failed, order not found", order_id=order_id)
                 raise HTTPException(404, "order with this id is not found")
 
-            if db_active_order.status not in (
-                "waiting_drop",
-                "waiting_pickup",
-                "waiting_cancelled",
-            ):
+            if db_active_order.status not in ("waiting_drop", "waiting_pickup", "waiting_cancelled"):
+                logger.warning("Drop/pickup confirm failed, wrong status", order_id=order_id, current_status=db_active_order.status)
                 raise HTTPException(409, "order is not in right status")
 
             if db_active_order.user1_id == user.id:
                 if db_active_order.user1_status:
+                    logger.warning("Order status already confimed", order_id=order_id)
                     raise HTTPException(409, "already confirmed")
 
                 db_active_order.user1_status = True
@@ -150,6 +163,7 @@ class ActiveOrderService:
 
             elif db_active_order.user2_id == user.id:
                 if db_active_order.user2_status:
+                    logger.warning("Order status already confimed", order_id=order_id)
                     raise HTTPException(409, "already confirmed")
 
                 db_active_order.user2_status = True
@@ -162,7 +176,10 @@ class ActiveOrderService:
                     await ActiveOrderService.next_status(db_active_order)
 
             else:
+                logger.warning("Not enough permission for order", order_id=order_id)
                 raise HTTPException(403, "not enough permission")
+
+        logger.info("Drop/pickup confirmed", order_id=order_id)
 
     @staticmethod
     async def select_locker(
@@ -175,9 +192,11 @@ class ActiveOrderService:
 
             db_active_order = result.scalar_one_or_none()
             if db_active_order is None:
+                logger.warning("Select locker failed, order not found", order_id=order_id)
                 raise HTTPException(404, "order not found")
 
             if db_active_order.status != "waiting_drop":
+                logger.warning("Select locker failed, invalid status", order_id=order_id, status=db_active_order.status)
                 raise HTTPException(409, "invalid order status")
 
             if user.id not in (db_active_order.user1_id, db_active_order.user2_id):
@@ -189,6 +208,7 @@ class ActiveOrderService:
                 work_locker_id = db_active_order.user2_locker_id
 
             if work_locker_id == locker_id:
+                logger.warning("Select locker failed, locker already taken", order_id=order_id, locker_id=locker_id)
                 raise HTTPException(409, "Locker already taken")
 
             result = await db.execute(
@@ -201,6 +221,7 @@ class ActiveOrderService:
             locker_id_db = result.scalar_one_or_none()
 
             if locker_id_db is None:
+                logger.warning("Select locker failed, locker full or not found", locker_id=locker_id)
                 raise HTTPException(409, "locker is full or not found")
 
             if work_locker_id is not None:
@@ -211,6 +232,8 @@ class ActiveOrderService:
             else:
                 db_active_order.user2_locker_id = locker_id
 
+            logger.info("Locker selected", order_id=order_id, locker_id=locker_id)
+
     @staticmethod
     async def create_order(
         db: AsyncSession, data: ActiveOrderCreate
@@ -220,6 +243,7 @@ class ActiveOrderService:
         await db.flush()
         await db.refresh(db_order)
 
+        logger.info("Active order created", order_id=db_order.id)
         return ActiveOrderRead.model_validate(db_order)
 
     @staticmethod
@@ -235,8 +259,10 @@ class ActiveOrderService:
 
         db_active_order = result.scalar_one_or_none()
         if db_active_order is None:
+            logger.warning("Get active order failed, order not found", order_id=order_id)
             raise HTTPException(404, "order not found")
 
+        logger.info("Active order retrieved", order_id=order_id)
         return ActiveOrderRead.model_validate(db_active_order)
 
     @staticmethod
@@ -254,9 +280,13 @@ class ActiveOrderService:
         )
 
         db_active_orders = result.scalars().all()
-        return [
-            ActiveOrderRead.model_validate(db_order) for db_order in db_active_orders
-        ]
+
+        if not db_active_orders:
+            logger.warning("No active orders found for user")
+        else:
+            logger.info("Fetched orders for user", count=len(db_active_orders))
+
+        return [ActiveOrderRead.model_validate(db_order) for db_order in db_active_orders]
 
     @staticmethod
     async def time_cancel_active_order(db: AsyncSession, order_id: int):
@@ -267,9 +297,11 @@ class ActiveOrderService:
 
             db_active_order = result.scalar_one_or_none()
             if db_active_order is None:
+                logger.warning("Time cancel failed, order not found", order_id=order_id)
                 raise HTTPException(404, "order is not found")
 
             if db_active_order.status != "waiting_drop":
+                logger.warning("Time cancel failed, invalid status", order_id=order_id, status=db_active_order.status)
                 raise HTTPException(409, "cannot cancel this status")
 
             user1_dropped = db_active_order.user1_status
@@ -279,12 +311,15 @@ class ActiveOrderService:
                 db_active_order.status = "cancelled"
                 db_active_order.cancel_reason = "time_cancel"
                 db_active_order.finished_at = func.now()
+                logger.info("Order cancelled due to time expiration", order_id=order_id)
             elif user1_dropped and user2_dropped:
                 await ActiveOrderService.next_status(db_active_order)
+                logger.info("Order status advanced after time check", order_id=order_id, new_status=db_active_order.status)
             else:
                 db_active_order.status = "waiting_cancelled"
                 db_active_order.cancel_reason = "time_cancel"
                 db_active_order.time_deadline = func.now() + text("interval '14 days'")
+                logger.info("Order moved to waiting_cancelled due to partial drop", order_id=order_id)
 
     @staticmethod
     async def cancel_active_order(
@@ -304,9 +339,11 @@ class ActiveOrderService:
 
             db_active_order = result.scalar_one_or_none()
             if db_active_order is None:
+                logger.warning("Cancel order failed, order not found", order_id=order_id)
                 raise HTTPException(404, "order is not found")
 
             if db_active_order.status not in ("waiting_drop", "delivery"):
+                logger.warning("Cancel order failed, invalid status", order_id=order_id, status=db_active_order.status)
                 raise HTTPException(409, "cannot cancel this status")
 
             if (
@@ -314,6 +351,7 @@ class ActiveOrderService:
                 and cancel_reason == "delivery_cancel"
             ):
                 if user.role != "deliveryman":
+                    logger.warning("Cancel order failed, not deliveryman", order_id=order_id)
                     raise HTTPException(403, "not enough permission")
 
                 db_active_order.status = "waiting_cancelled"
@@ -322,6 +360,8 @@ class ActiveOrderService:
 
                 db_active_order.user1_status = False
                 db_active_order.user2_status = False
+
+                logger.info("Order delivery cancelled", order_id=order_id)
 
             elif (
                 db_active_order.status == "waiting_drop"
@@ -333,13 +373,16 @@ class ActiveOrderService:
                 is_user1 = user.id == db_active_order.user1_id
 
                 if (is_user1 and user1_dropped) or (not is_user1 and user2_dropped):
+                    logger.warning("Cancel order failed, user already dropped book", order_id=order_id)
                     raise HTTPException(409, "you already dropped book")
 
                 if not user1_dropped and not user2_dropped:
                     db_active_order.status = "cancelled"
                     db_active_order.cancel_reason = cancel_reason
                     db_active_order.finished_at = func.now()
+                    logger.info("Order cancelled by user", order_id=order_id)
                 elif user1_dropped and user2_dropped:
+                    logger.warning("Cancel order failed, both books already dropped", order_id=order_id)
                     raise HTTPException(409, "books already dropped")
                 else:
                     db_active_order.status = "waiting_cancelled"
@@ -348,5 +391,8 @@ class ActiveOrderService:
                         "interval '14 days'"
                     )
 
+                    logger.info("Order moved to waiting_cancelled due to partial drop", order_id=order_id)
+
             else:
+                logger.warning("Cancel order failed, invalid combination of status and reason", order_id=order_id, status=db_active_order.status, cancel_reason=cancel_reason)
                 raise HTTPException(409, "invalid cancel_reason and status")

@@ -12,6 +12,7 @@ from src.core.jwt import create_access_token, create_refresh_token, decode_jwt_t
 from fastapi.responses import JSONResponse
 from jose import JWTError
 from src.services.users import UserService
+from loguru import logger
 
 
 class AuthService:
@@ -28,6 +29,7 @@ class AuthService:
         await db.commit()
         await db.refresh(db_user)
 
+        logger.info("User registered successfully", email=db_user.email)
         return UserRead.model_validate(db_user)
 
 
@@ -45,6 +47,7 @@ class AuthService:
             or not await verify_password(data.password, db_user.password)
             or db_user.deleted_at is not None
         ):
+            logger.warning("Failed login attempt", login=data.login)
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         access_token = await create_access_token({"sub": str(db_user.id)})
@@ -67,12 +70,14 @@ class AuthService:
             samesite="lax",
         )
 
+        logger.info("User logged in successfully", user_id=db_user.id, email=db_user.email)
         return response
 
     @staticmethod
     async def refresh(db: AsyncSession, request: Request) -> JSONResponse:
         refresh_token = request.cookies.get("refresh_token")
         if not refresh_token:
+            logger.warning("Refresh token missing")
             raise HTTPException(status_code=401, detail="Missing refresh token")
 
         try:
@@ -81,6 +86,7 @@ class AuthService:
             user_data = await UserService.get_user_by_id(db, user_id)
             user = user_data.data
         except JWTError:
+            logger.warning("Invalid refresh token")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
         new_access = await create_access_token({"sub": user_id})
@@ -102,4 +108,5 @@ class AuthService:
             samesite="lax",
         )
 
+        logger.info("Access and refresh tokens issued", user_id=user_id)
         return response

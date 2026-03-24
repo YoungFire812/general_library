@@ -14,6 +14,7 @@ from src.schemas.active_orders import ActiveOrderCreate, ActiveOrderRead
 from src.services.active_orders import ActiveOrderService
 from src.services.users import UserService
 from typing import List, Literal
+from loguru import logger
 
 
 class ExchangeOfferService:
@@ -52,6 +53,8 @@ class ExchangeOfferService:
         result = await db.execute(stmt)
         db_offers = result.scalars().all()
         offers = [ExchangeOfferRead.model_validate(db_offer) for db_offer in db_offers]
+
+        logger.info("User exchange offers fetched", count=len(offers))
         return offers
 
     @staticmethod
@@ -74,8 +77,10 @@ class ExchangeOfferService:
         )
         db_offer = result.scalar_one_or_none()
         if db_offer is None:
+            logger.warning("Exchange offer not found", offer_id=offer_id)
             raise HTTPException(404, "Offer not found")
 
+        logger.info("Exchange offer fetched successfully", offer_id=offer_id)
         return ExchangeOfferRead.model_validate(db_offer)
 
     @staticmethod
@@ -83,12 +88,15 @@ class ExchangeOfferService:
         db: AsyncSession, user_id: int, data: ExchangeOfferCreate
     ) -> ExchangeOfferRead:
         if user_id != data.from_user_id:
+            logger.warning("Permission denied for creating offer")
             raise HTTPException(403, "Not enough permission!")
 
         if data.from_user_id == data.to_user_id:
+            logger.warning("Invalid data for creating offer")
             raise HTTPException(400, "You cannot exchange with yourself")
 
         if data.offered_book_id == data.requested_book_id:
+            logger.warning("Invalid data for creating offer")
             raise HTTPException(400, "Books must be different")
 
         UserService.get_user_by_id(data.to_user_id)
@@ -109,6 +117,7 @@ class ExchangeOfferService:
 
         books = result.first()
         if not books:
+            logger.warning("Books not found for offer creation")
             raise HTTPException(404, "Books not found")
 
         payload = data.model_dump()
@@ -119,6 +128,7 @@ class ExchangeOfferService:
         await db.commit()
         await db.refresh(db_offer)
 
+        logger.info("Exchange offer created successfully", offer_id=db_offer.id)
         return ExchangeOfferRead.model_validate(db_offer)
 
     @staticmethod
@@ -139,12 +149,14 @@ class ExchangeOfferService:
             )
 
             db_offer = result.scalar_one_or_none()
-
             if db_offer is None:
+                logger.warning("Exchange offer not found for decline", offer_id=offer_id)
                 raise HTTPException(404, "Offer not found")
 
             db_offer.status = "declined"
             db_offer.responded_at = func.now()
+
+        logger.info("Exchange offer declined", offer_id=offer_id)
 
     @staticmethod
     async def accept_offer(
@@ -170,13 +182,16 @@ class ExchangeOfferService:
 
             row = result.one_or_none()
             if row is None:
+                logger.warning("Exchange offer not found for accept", offer_id=offer_id)
                 raise HTTPException(404, "Offer not found")
 
             db_offer, db_offered_book, db_requested_book = row
             if db_offered_book.status != "available":
+                logger.warning("Offered book not available for offer accept", offer_id=offer_id)
                 raise HTTPException(400, "Offered book not available")
 
             if db_requested_book.status != "available":
+                logger.warning("Requested book not available for offer accept", offer_id=offer_id)
                 raise HTTPException(400, "Requested book not available")
 
             db_offered_book.status = "reserved"
@@ -191,6 +206,8 @@ class ExchangeOfferService:
                 user1_book_id=db_offered_book.id,
                 user2_book_id=db_requested_book.id,
             )
+            active_order = await ActiveOrderService.create_order(db, active_order_data)
 
-            return await ActiveOrderService.create_order(db, active_order_data)
+        logger.info("Exchange offer accepted and active order created", offer_id=offer_id, active_order_id=active_order.id)
+        return active_order
 

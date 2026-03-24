@@ -6,6 +6,7 @@ from src.schemas.carts import CartItemCreate, CartRead, CartItemRead
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from typing import List
+from loguru import logger
 from src.core.sqlErrors import is_error, UNIQUE_VIOLATION
 from sqlalchemy.exc import IntegrityError
 
@@ -17,15 +18,16 @@ class CartService:
     ) -> CartItemRead:
         cart = await db.get(Cart, product.cart_id)
         if not cart or cart.user_id != user_id:
-            raise HTTPException(
-                status_code=403, detail="Not allowed to modify this cart"
-            )
+            logger.warning("Unauthorized attempt to modify cart", cart_id=product.cart_id)
+            raise HTTPException(status_code=403, detail="Not allowed to modify this cart")
 
         db_cart_item = CartItem(**product.model_dump())
         db.add(db_cart_item)
 
         await db.commit()
         await db.refresh(db_cart_item)
+
+        logger.info("Product added to cart successfully", cart_id=product.cart_id, product_id=db_cart_item.id)
         return CartItemRead.model_validate(db_cart_item)
 
 
@@ -44,6 +46,7 @@ class CartService:
         book_ids = result_book_ids.scalars().all()
 
         if not book_ids:
+            logger.info("No products found in cart", cart_id=cart_id)
             return []
 
         result_books = await db.execute(
@@ -56,6 +59,7 @@ class CartService:
 
         books = result_books.scalars().all()
 
+        logger.info("Cart products fetched successfully", cart_id=cart_id, count=len(books))
         return [BookRead.model_validate(book) for book in books]
 
     @staticmethod
@@ -63,4 +67,5 @@ class CartService:
         result = await db.execute(select(Cart).where(Cart.user_id == user_id))
         cart_obj = result.scalar_one()
 
+        logger.info("Cart fetched successfully", cart_id=cart_obj.id)
         return CartRead.model_validate(cart_obj)
