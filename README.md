@@ -5,27 +5,29 @@
 * [Идея проекта](#идея-проекта)
 * [Ключевые особенности](#ключевые-особенности)
 * [Project Structure](#project-structure)
+  * [Description](#description)
 * [API Endpoints](#api-endpoints)
-
   * [Authentication](#authentication)
   * [Users](#users)
   * [Books](#books)
-  * [Cart](#cart-корзина)
+  * [Cart](#cart)
   * [Categories](#categories)
   * [Exchange Offers](#exchange-offers)
   * [Active Orders](#active-orders)
   * [Files Upload](#files-upload)
   * [Lockers](#lockers)
 * [Функциональность](#функциональность)
-
   * [Аутентификация](#аутентификация)
+  * [Пользователи](#пользователи)
   * [Книги и категории](#книги-и-категории)
-  * [Система обмена](#система-обмена)
   * [Корзина](#корзина)
+  * [Система обмена](#система-обмена)
+  * [Активные сделки](#активные-сделки)
+  * [Постаматы (Lockers)](#постаматы-lockers)
   * [Файлы (MinIO)](#файлы-minio)
-  * [Дополнительно](#дополнительно)
+  * [Логирование](#логирование)
+  * [Тестирование](#тестирование)
 * [Технологии](#технологии)
-
   * [Backend](#backend)
   * [База данных](#база-данных)
   * [Инфраструктура](#инфраструктура)
@@ -84,81 +86,85 @@ Backend-сервис для платформы обмена книгами.
 ```
 general_library/
 │
-├── src/                           # Application package
-│   ├── routers/                   # API routes
-│   │   ├── active_orders.py       # Active orders endpoints
-│   │   ├── auth.py                # Authentication endpoints
-│   │   ├── books.py               # Books endpoints
-│   │   ├── carts.py               # Cart endpoints
-│   │   ├── categories.py          # Categories endpoints
-│   │   ├── exchange_offers.py     # Exchange offers endpoints
-│   │   ├── files.py               # File upload endpoints
-│   │   ├── lockers.py             # Locker endpoints
-│   │   └── users.py               # User management endpoints
-│   │
-│   ├── core/                       # Core functionality
-│   │   ├── config.py               # Configuration settings
-│   │   ├── deps.py                 # Dependency injection
-│   │   ├── jwt.py                  # JWT handling
-│   │   ├── limiter.py              # Request limiting
-│   │   ├── security.py             # Security utilities
-│   │   └── sqlErrors.py            # Database error handling
-│   │
-│   ├── db/                         # Database layer
-│   │   ├── base.py                 # Base models
-│   │   └── database.py             # Database connection
-│   │
-│   ├── minio/                      # File storage layer
-│   │   └── minio_client.py         # MinIO client
-│   │
-│   ├── models/                     # SQLAlchemy models
-│   │   ├── events.py
-│   │   ├── models.py
-│   │   └── __init__.py
-│   │
-│   ├── schemas/                    # Pydantic schemas
-│   │   ├── active_orders.py
-│   │   ├── auth.py
-│   │   ├── books.py
-│   │   ├── carts.py
-│   │   ├── categories.py
-│   │   ├── dto.py
-│   │   ├── exchange_offers.py
-│   │   ├── lockers.py
-│   │   └── users.py
-│   │
-│   ├── services/                   # Business logic
-│   │   ├── active_orders.py
-│   │   ├── auth.py
-│   │   ├── books.py
-│   │   ├── carts.py
-│   │   ├── categories.py
-│   │   ├── exchange_offers.py
-│   │   ├── lockers.py
-│   │   └── users.py
-│   │
-│   ├── main.py                     # Application entry point
-│   └──constants.py                 # Application Enum constants 
+├── src/                           # Основной код приложения
+│   ├── constants.py               # Константы и Enum’ы приложения
+│   ├── main.py                    # Точка входа FastAPI приложения
+│   └── Dockerfile                 # Docker image definition
 │
-├── tests/                          # Test suite
-├── .env                            # Example environment variables
-├── docker-compose.yml              # Docker Compose configuration
-└── Dockerfile                      # Docker image definition
+├── core/                          # Основная конфигурация и утилиты
+│   ├── config.py                  # Настройки приложения
+│   ├── deps.py                    # Dependency Injection
+│   ├── exceptions.py              # Кастомные исключения
+│   ├── jwt.py                     # JWT обработка
+│   ├── limiter.py                 # Ограничение запросов
+│   ├── logger.py                  # Логирование
+│   ├── security.py                # Безопасность
+│   └── sqlErrors.py               # Обработка ошибок базы данных
+│
+├── db/                            # Работа с базой данных
+│   ├── base.py                    # Base модели SQLAlchemy
+│   └── database.py                # Подключение к базе данных
+│
+├── middleware/                    # Middleware для FastAPI
+│   ├── logging.py                 # Middleware для логирования
+│   ├── request_id.py              # Middleware для request_id
+│   └── __init__.py
+│
+├── minio/                         # Работа с файловым хранилищем
+│   └── minio_client.py            # MinIO клиент
+│
+├── models/                        # SQLAlchemy модели
+│   ├── events.py
+│   ├── models.py
+│   └── __init__.py
+│
+├── routers/                        # Маршруты API
+│   ├── active_orders.py            # Endpoints для активных заказов
+│   ├── auth.py                     # Endpoints аутентификации
+│   ├── books.py                    # Endpoints книг
+│   ├── carts.py                    # Endpoints корзины
+│   ├── categories.py               # Endpoints категорий
+│   ├── exchange_offers.py          # Endpoints предложений обмена
+│   ├── files.py                    # Endpoints для загрузки файлов
+│   ├── lockers.py                  # Endpoints постаматов
+│   └── users.py                    # Endpoints пользователей
+│
+├── schemas/                        # Pydantic-схемы для валидации данных
+│   ├── active_orders.py
+│   ├── auth.py
+│   ├── books.py
+│   ├── carts.py
+│   ├── categories.py
+│   ├── dto.py
+│   ├── exchange_offers.py
+│   ├── lockers.py
+│   └── users.py
+│
+└── services/                       # Бизнес-логика приложения
+    ├── active_orders.py
+    ├── auth.py
+    ├── books.py
+    ├── carts.py
+    ├── categories.py
+    ├── exchange_offers.py
+    ├── lockers.py
+    └── users.py
 ```
 
 ### Description
 
 - **src/** — основной код приложения  
-- **routers/** — маршруты API  
-- **core/** — конфигурация, безопасность, JWT, лимитирование и обработка ошибок  
+- **core/** — конфигурация, безопасность, JWT, лимитирование, логирование и обработка ошибок  
 - **db/** — подключение к базе данных и базовые модели  
+- **middleware/** — middleware для FastAPI (логирование, request_id)  
 - **minio/** — работа с файловым хранилищем  
 - **models/** — SQLAlchemy модели  
 - **schemas/** — Pydantic-схемы для валидации данных  
 - **services/** — бизнес-логика приложения  
+- **routers/** — маршруты API  
 - **main.py** — точка входа FastAPI приложения  
-- **tests/** — тесты проекта  
-- **docker-compose.yml / Dockerfile** — контейнеризация и запуск
+- **tests/** — тесты проекта, покрывающие основные сценарии  
+- **Dockerfile / docker-compose.yml** — контейнеризация и запуск  
 
 ---
 
@@ -247,61 +253,72 @@ general_library/
 
 ### Аутентификация
 
-- JWT-аутентификация  
-- Защита маршрутов через зависимости  
-- Управление пользователями  
+Отвечает за идентификацию пользователей и защиту системы.  
+Позволяет пользователям регистрироваться, входить в систему и безопасно взаимодействовать с API через JWT-токены.  
+Обеспечивает изоляцию данных и контроль доступа к ресурсам.
 
-Система построена с возможностью дальнейшего расширения (роли, права доступа).
+---
+
+### Пользователи
+
+Управляет профилями пользователей.  
+Позволяет получать, обновлять и удалять данные учетной записи, обеспечивая контроль пользователя над своей информацией.
 
 ---
 
 ### Книги и категории
 
-- Создание и управление книгами  
-- Связь книг с категориями 
-- Участие в обмене только доступных книг  
-- Поиск книг по категориям и ключевым словам 
-
-Формируется структурированная база для работы с каталогом.
-
----
-
-### Система обмена
-
-- Гибкая система обмена книгами с выбором доступных экземпляров  
-- Формирование и согласование предложений обмена между пользователями  
-- Активные сделки с отслеживанием статусов и безопасной сделкой
-
-Это центральная часть проекта. Именно здесь реализуется логика взаимодействия между пользователями.
+Формируют основу каталога системы.  
+Книги связаны с категориями, что позволяет структурировать данные, реализовать поиск и упростить навигацию по доступным предложениям.
 
 ---
 
 ### Корзина
 
-- Добавление и удаление книг  
-- Используется для хранения книг, как промежуточный этап перед обменом
+Используется как промежуточное хранилище книг пользователя.  
+Позволяет собирать книги перед созданием предложения обмена и гибко формировать будущую сделку.
 
-Позволяет гибко формировать предложения.
+---
+
+### Система обмена
+
+Ключевая часть проекта, отвечающая за взаимодействие между пользователями.  
+Позволяет создавать, отправлять и обрабатывать предложения обмена книгами, формируя основу пользовательского взаимодействия в системе.
+
+---
+
+### Активные сделки
+
+Отвечают за жизненный цикл обмена после его подтверждения.  
+Позволяют отслеживать статус сделки, управлять этапами передачи книг и обеспечивают завершение обмена.
+
+---
+
+### Постаматы (Lockers)
+
+Обеспечивают физическую точку передачи книг между пользователями.  
+Позволяют выбрать место для обмена и упростить процесс передачи без прямого контакта.
 
 ---
 
 ### Файлы (MinIO)
 
-- Загрузка файлов в удобное хранилище
-- Отдельный клиент для работы с хранилищем  
-- Подготовка к использованию внешнего storage  
-
-Решение позволяет легко масштабировать работу с медиа.
+Отвечают за хранение медиа (например, изображений книг).  
+Позволяют загружать и использовать файлы через S3-совместимое хранилище, обеспечивая масштабируемость работы с контентом.
 
 ---
 
-### Дополнительно
+### Логирование
 
-- Ограничение запросов (`core/limiter.py`)  
-- Обработка ошибок базы данных (`sqlErrors.py`)  
-- Dependency Injection (`deps.py`)  
+Обеспечивает прозрачность работы системы.  
+Позволяет отслеживать запросы, ошибки и поведение приложения, упрощая отладку и мониторинг.
 
-Повышает стабильность и управляемость системы.
+---
+
+### Тестирование
+
+Гарантирует стабильность и корректность работы системы.  
+Покрывает ключевые бизнес-сценарии и позволяет безопасно вносить изменения в код.
 
 ---
 
