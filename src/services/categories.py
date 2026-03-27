@@ -58,7 +58,7 @@ class CategoryService:
         db_category = Category(**category_dict)
         db.add(db_category)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_category)
 
         logger.info("Category created successfully", category_id=db_category.id)
@@ -77,7 +77,8 @@ class CategoryService:
             logger.warning("Category not found for update", category_id=category_id)
             raise HTTPException(status_code=404, detail="Category not found!")
 
-        data = data.model_dump()
+        data = data.model_dump(exclude_unset=True)
+        data = {k: v for k, v in data.items() if v is not None}
         if not data:
             logger.warning("No fields to update", category_id=category_id)
             raise HTTPException(400, "No fields to update")
@@ -86,7 +87,7 @@ class CategoryService:
             if value is not None:
                 setattr(db_category, field, value)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_category)
 
         logger.info("Category updated successfully", category_id=category_id, updated_fields=list(data.keys()))
@@ -106,7 +107,7 @@ class CategoryService:
             raise HTTPException(status_code=404, detail="Category not found!")
 
         db_category.deleted_at = datetime.now(timezone.utc)
-        await db.commit()
+        await db.flush()
         await db.refresh(db_category)
 
         logger.info("Category soft-deleted successfully", category_id=category_id)

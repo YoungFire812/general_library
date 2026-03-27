@@ -39,7 +39,8 @@ class UserService:
             data = data.model_dump(exclude={"password"})
             data["password"] = hashed_password
         else:
-            data = data.model_dump()
+            data = data.model_dump(exclude_unset=True)
+            data = {k: v for k, v in data.items() if v is not None}
 
         if not data:
             logger.warning("No fields to update")
@@ -49,10 +50,10 @@ class UserService:
             if value is not None:
                 setattr(db_user, field, value)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_user)
 
-        logger.info("User updated successfully", updated_fields=list(data_dict.keys()))
+        logger.info("User updated successfully", updated_fields=list(data.keys()))
         return UserRead.model_validate(db_user)
 
 

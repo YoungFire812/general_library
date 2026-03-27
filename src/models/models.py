@@ -102,6 +102,7 @@ class Book(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     author: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
+
     status: Mapped[str] = mapped_column(
         Enum(
             "available",
@@ -115,8 +116,9 @@ class Book(Base):
         nullable=False,
         index=True
     )
+
     thumbnail: Mapped[str] = mapped_column(String, nullable=False)
-    images: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
+    images: Mapped[list] = mapped_column(JSONB, default=list, nullable=True)
     is_published: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -129,8 +131,8 @@ class Book(Base):
     cart_items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="book")
 
     __table_args__ = (
-        Index("idx_books_title_trgm", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"}),
-        Index("idx_books_author_trgm", "author", postgresql_using="gin", postgresql_ops={"author": "gin_trgm_ops"}),
+        Index("idx_books_title", "title"),
+        Index("idx_books_author", "author"),
     )
 
 
@@ -176,7 +178,7 @@ class ExchangeOffer(Base):
             "offered_book_id",
             "requested_book_id",
             name="unique_exchange_offer",
-        )
+        ),
     )
 
 

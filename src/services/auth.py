@@ -26,12 +26,11 @@ class AuthService:
         db_user.carts = Cart()
         db.add(db_user)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_user)
 
         logger.info("User registered successfully", email=db_user.email)
         return UserRead.model_validate(db_user)
-
 
     @staticmethod
     async def user_login(db: AsyncSession, data: UserLogin) -> JSONResponse:
@@ -59,7 +58,7 @@ class AuthService:
         )
 
         response = JSONResponse(
-            content={"message": "Login success!", "data": auth_response}
+            content={"message": "Login success!", "data": auth_response.model_dump(mode="json")}
         )
 
         response.set_cookie(
@@ -83,8 +82,7 @@ class AuthService:
         try:
             payload = await decode_jwt_token(refresh_token)
             user_id = int(payload.get("sub"))
-            user_data = await UserService.get_user_by_id(db, user_id)
-            user = user_data.data
+            user = await UserService.get_user_by_id(db, user_id)
         except JWTError:
             logger.warning("Invalid refresh token")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -94,11 +92,11 @@ class AuthService:
 
         auth_response = AuthResponse(
             access_token=new_access,
-            user=UserRead.model_validate(user, from_attributes=True),
+            user=user
         )
 
         response = JSONResponse(
-            content={"message": "Token refreshed", "data": auth_response}
+            content={"message": "Token refreshed", "data": auth_response.model_dump(mode="json")}
         )
         response.set_cookie(
             key="refresh_token",

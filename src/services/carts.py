@@ -24,7 +24,7 @@ class CartService:
         db_cart_item = CartItem(**product.model_dump())
         db.add(db_cart_item)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_cart_item)
 
         logger.info("Product added to cart successfully", cart_id=product.cart_id, product_id=db_cart_item.id)

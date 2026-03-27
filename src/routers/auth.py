@@ -15,14 +15,14 @@ auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth_router.post("/registration", response_model=UserRead, status_code=201)
 @limiter.limit("5/minute")
-async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> UserRead:
+async def create_user(request: Request, user: UserCreate, db: AsyncSession = Depends(get_db)) -> UserRead:
     return await AuthService.user_registration(db, user)
 
 
 @auth_router.post("/login")
 @limiter.limit("5/minute")
 async def login_user(
-    user: UserLogin, db: AsyncSession = Depends(get_db)
+    request: Request, user: UserLogin, db: AsyncSession = Depends(get_db)
 ) -> JSONResponse:
     return await AuthService.user_login(db, user)
 
