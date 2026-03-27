@@ -99,7 +99,7 @@ class ExchangeOfferService:
             logger.warning("Invalid data for creating offer")
             raise HTTPException(400, "Books must be different")
 
-        UserService.get_user_by_id(data.to_user_id)
+        await UserService.get_user_by_id(db, data.to_user_id)
 
         OfferedBook = aliased(Book)
         RequestedBook = aliased(Book)
@@ -125,7 +125,7 @@ class ExchangeOfferService:
 
         db.add(db_offer)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_offer)
 
         logger.info("Exchange offer created successfully", offer_id=db_offer.id)
@@ -133,28 +133,27 @@ class ExchangeOfferService:
 
     @staticmethod
     async def decline_offer(db: AsyncSession, offer_id: int, user_id: int):
-        async with db.begin():
-            result = await db.execute(
-                select(ExchangeOffer)
-                .where(
-                    ExchangeOffer.id == offer_id,
-                    ExchangeOffer.status == "pending",
-                    ExchangeOffer.expires_at > func.now(),
-                    or_(
-                        ExchangeOffer.to_user_id == user_id,
-                        ExchangeOffer.from_user_id == user_id,
-                    ),
-                )
-                .with_for_update()
+        result = await db.execute(
+            select(ExchangeOffer)
+            .where(
+                ExchangeOffer.id == offer_id,
+                ExchangeOffer.status == "pending",
+                ExchangeOffer.expires_at > func.now(),
+                or_(
+                    ExchangeOffer.to_user_id == user_id,
+                    ExchangeOffer.from_user_id == user_id,
+                ),
             )
+            .with_for_update()
+        )
 
-            db_offer = result.scalar_one_or_none()
-            if db_offer is None:
-                logger.warning("Exchange offer not found for decline", offer_id=offer_id)
-                raise HTTPException(404, "Offer not found")
+        db_offer = result.scalar_one_or_none()
+        if db_offer is None:
+            logger.warning("Exchange offer not found for decline", offer_id=offer_id)
+            raise HTTPException(404, "Offer not found")
 
-            db_offer.status = "declined"
-            db_offer.responded_at = func.now()
+        db_offer.status = "declined"
+        db_offer.responded_at = func.now()
 
         logger.info("Exchange offer declined", offer_id=offer_id)
 
@@ -162,51 +161,50 @@ class ExchangeOfferService:
     async def accept_offer(
         db: AsyncSession, offer_id: int, user_id: int
     ) -> ActiveOrderRead:
-        async with db.begin():
-            OfferedBook = aliased(Book)
-            RequestedBook = aliased(Book)
-            result = await db.execute(
-                select(ExchangeOffer, OfferedBook, RequestedBook)
-                .join(OfferedBook, OfferedBook.id == ExchangeOffer.offered_book_id)
-                .join(
-                    RequestedBook, RequestedBook.id == ExchangeOffer.requested_book_id
-                )
-                .where(
-                    ExchangeOffer.id == offer_id,
-                    ExchangeOffer.status == "pending",
-                    ExchangeOffer.expires_at > func.now(),
-                    ExchangeOffer.to_user_id == user_id,
-                )
-                .with_for_update()
+        OfferedBook = aliased(Book)
+        RequestedBook = aliased(Book)
+        result = await db.execute(
+            select(ExchangeOffer, OfferedBook, RequestedBook)
+            .join(OfferedBook, OfferedBook.id == ExchangeOffer.offered_book_id)
+            .join(
+                RequestedBook, RequestedBook.id == ExchangeOffer.requested_book_id
             )
-
-            row = result.one_or_none()
-            if row is None:
-                logger.warning("Exchange offer not found for accept", offer_id=offer_id)
-                raise HTTPException(404, "Offer not found")
-
-            db_offer, db_offered_book, db_requested_book = row
-            if db_offered_book.status != "available":
-                logger.warning("Offered book not available for offer accept", offer_id=offer_id)
-                raise HTTPException(400, "Offered book not available")
-
-            if db_requested_book.status != "available":
-                logger.warning("Requested book not available for offer accept", offer_id=offer_id)
-                raise HTTPException(400, "Requested book not available")
-
-            db_offered_book.status = "reserved"
-            db_requested_book.status = "reserved"
-
-            db_offer.status = "accepted"
-            db_offer.responded_at = func.now()
-
-            active_order_data = ActiveOrderCreate(
-                user1_id=db_offer.from_user_id,
-                user2_id=db_offer.to_user_id,
-                user1_book_id=db_offered_book.id,
-                user2_book_id=db_requested_book.id,
+            .where(
+                ExchangeOffer.id == offer_id,
+                ExchangeOffer.status == "pending",
+                ExchangeOffer.expires_at > func.now(),
+                ExchangeOffer.to_user_id == user_id,
             )
-            active_order = await ActiveOrderService.create_order(db, active_order_data)
+            .with_for_update()
+        )
+
+        row = result.one_or_none()
+        if row is None:
+            logger.warning("Exchange offer not found for accept", offer_id=offer_id)
+            raise HTTPException(404, "Offer not found")
+
+        db_offer, db_offered_book, db_requested_book = row
+        if db_offered_book.status != "available":
+            logger.warning("Offered book not available for offer accept", offer_id=offer_id)
+            raise HTTPException(400, "Offered book not available")
+
+        if db_requested_book.status != "available":
+            logger.warning("Requested book not available for offer accept", offer_id=offer_id)
+            raise HTTPException(400, "Requested book not available")
+
+        db_offered_book.status = "reserved"
+        db_requested_book.status = "reserved"
+
+        db_offer.status = "accepted"
+        db_offer.responded_at = func.now()
+
+        active_order_data = ActiveOrderCreate(
+            user1_id=db_offer.from_user_id,
+            user2_id=db_offer.to_user_id,
+            user1_book_id=db_offered_book.id,
+            user2_book_id=db_requested_book.id,
+        )
+        active_order = await ActiveOrderService.create_order(db, active_order_data)
 
         logger.info("Exchange offer accepted and active order created", offer_id=offer_id, active_order_id=active_order.id)
         return active_order

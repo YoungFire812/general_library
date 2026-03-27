@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from src.schemas.books import BookCreate, BookRead, BookUpdate
 from src.services.books import BookService
 from src.db.database import get_db
@@ -31,8 +31,8 @@ async def get_one_book(book_id: int, db: AsyncSession = Depends(get_db)) -> Book
 
 @books_router.post("", response_model=BookRead, status_code=201)
 @limiter.limit("1/minute")
-async def create_book(book: BookCreate, db: AsyncSession = Depends(get_db)) -> BookRead:
-    return await BookService.create_book(db, book)
+async def create_book(request: Request, book: BookCreate, db: AsyncSession = Depends(get_db), user: UserRead = Depends(dev_get_current_user)) -> BookRead:
+    return await BookService.create_book(db, book, user)
 
 
 @books_router.patch("/{book_id}", response_model=BookRead)

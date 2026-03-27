@@ -15,7 +15,7 @@ class LockerService:
         db_locker = Locker(**payload)
         db.add(db_locker)
 
-        await db.commit()
+        await db.flush()
         await db.refresh(db_locker)
 
         logger.info("Locker created successfully", locker_id=db_locker.id)

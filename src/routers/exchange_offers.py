@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from src.db.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Literal
@@ -42,6 +42,7 @@ async def get_one_offer(
 @exchange_offers_router.post("/", response_model=ExchangeOfferRead, status_code=201)
 @limiter.limit("1/minute")
 async def create_offer(
+    request: Request,
     offer: ExchangeOfferCreate,
     db: AsyncSession = Depends(get_db),
     user: UserRead = Depends(dev_get_current_user),
