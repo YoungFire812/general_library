@@ -40,6 +40,8 @@
 # General Library
 
 Backend-сервис для платформы обмена книгами.
+
+
 <img width="1491" height="1271" alt="image" src="https://github.com/user-attachments/assets/7c4cc5eb-4821-41a8-ae46-4a69dc27503f" />
 
 ---
